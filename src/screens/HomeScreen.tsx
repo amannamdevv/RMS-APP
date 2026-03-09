@@ -60,16 +60,24 @@ export default function HomeScreen({ navigation, route }: Props) {
     navigation.replace('Login');
   };
 
-  // 1. ADDED NON-COMM SITES TO MENU & ATTACHED KPI COUNT
   const menuItems = [
     {
       id: 'NonComm',
       title: 'Offline Sites',
       subtitle: 'Non-Communicating',
       icon: '📡',
-      color: '#dc2626', // Red color to draw attention
+      color: '#dc2626',
       route: 'NonCommSites' as const,
-      count: kpi.non_active_sites, // <-- Injecting live count here!
+      count: kpi.non_active_sites, 
+    },
+    {
+      id: 'RunningStatus',
+      title: 'Running Status',
+      subtitle: 'EB / DG / Battery',
+      icon: '⚡',
+      color: '#01497C',
+      route: 'SiteRunningStatus' as const,
+      count: kpi.active_sites, // <-- Added Active Sites count here!
     },
     {
       id: 'Alarms',
@@ -83,7 +91,7 @@ export default function HomeScreen({ navigation, route }: Props) {
       id: 'Reports',
       title: 'Energy Reports',
       subtitle: 'Mains & DG Logs',
-      icon: '⚡',
+      icon: '📊',
       color: '#10b981',
       route: 'Reports' as const,
     },
@@ -160,7 +168,6 @@ export default function HomeScreen({ navigation, route }: Props) {
           )}
         </TouchableOpacity>
 
-        {/* 2. UPDATED GRID TO SUPPORT LIVE COUNTS & NAVIGATION */}
         <View style={styles.grid}>
           {menuItems.map((item) => (
             <TouchableOpacity
@@ -168,9 +175,9 @@ export default function HomeScreen({ navigation, route }: Props) {
               style={styles.card}
               activeOpacity={0.8}
               onPress={() => {
-                // Navigate if the route matches our new screen
-                if (item.route === 'NonCommSites') {
-                  navigation.navigate('NonCommSites');
+                // <-- Dynamic Navigation handling added here
+                if (item.route === 'NonCommSites' || item.route === 'SiteRunningStatus') {
+                  navigation.navigate(item.route);
                 } else {
                   console.log(`Navigation to ${item.route} not yet built`);
                 }
@@ -181,7 +188,6 @@ export default function HomeScreen({ navigation, route }: Props) {
                   <Text style={styles.icon}>{item.icon}</Text>
                 </View>
                 
-                {/* 3. SHOW BADGE IF COUNT EXISTS */}
                 {item.count !== undefined && !loadingKpi && (
                   <View style={[styles.badge, { backgroundColor: item.color }]}>
                     <Text style={styles.badgeText}>{item.count}</Text>
@@ -220,7 +226,6 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   card: { backgroundColor: '#fff', width: '48%', borderRadius: 16, padding: 16, marginBottom: 16, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
   
-  // New Styles for the Card layout to support Badges
   cardIconRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, minWidth: 24, alignItems: 'center' },
   badgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },

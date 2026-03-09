@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, SafeAreaView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, SafeAreaView, RefreshControl, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
 import { api } from '../api';
 import Icon from 'react-native-vector-icons/Feather';
+import FilterModal from '../components/FilterModal';
+import RNFS from 'react-native-fs';
+import Share from 'react-native-share';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NonCommSites'>;
 
@@ -24,14 +27,18 @@ export default function NonCommSitesScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchData = async (pageNum = 1, isRefresh = false) => {
+  // Filter States
+  const [activeFilters, setActiveFilters] = useState({});
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+
+  const fetchData = async (pageNum = 1, isRefresh = false, currentFilters = activeFilters) => {
     if (loading && !isRefresh) return;
     setLoading(true);
     
     try {
-      // Fetch buckets on first load only
+      // Fetch buckets on first load or when filters change
       if (pageNum === 1) {
-        const bucketRes = await api.getNonCommAging({});
+        const bucketRes = await api.getNonCommAging(currentFilters);
         if (bucketRes.status === 'success') {
           setBuckets(bucketRes.data.aging_buckets);
           setTotalSites(bucketRes.data.total_non_comm);
@@ -39,7 +46,7 @@ export default function NonCommSitesScreen({ navigation }: Props) {
       }
 
       // Fetch Paginated List
-      const listRes = await api.getNonCommSitesList({}, pageNum, 10);
+      const listRes = await api.getNonCommSitesList(currentFilters, pageNum, 10);
       if (listRes.status === 'success') {
         if (isRefresh) setSites(listRes.data);
         else setSites(prev => [...prev, ...listRes.data]);
@@ -55,7 +62,50 @@ export default function NonCommSitesScreen({ navigation }: Props) {
     }
   };
 
-  useEffect(() => { fetchData(1, true); }, []);
+  useEffect(() => { 
+    fetchData(1, true, activeFilters); 
+  }, [activeFilters]);
+
+  const handleApplyFilters = (newFilters: any) => {
+    setActiveFilters(newFilters);
+  };
+
+  const handleExport = async () => {
+    try {
+      // Fetch all matching data (large page size)
+      const res = await api.getNonCommSitesList(activeFilters, 1, 10000);
+      
+      if (res.status === 'success') {
+        const sitesArray = res.data;
+        if (!sitesArray || sitesArray.length === 0) {
+          return Alert.alert("No Data", "There is no data to export with the current filters.");
+        }
+
+        const csvRows = ["Site ID,Site Name,Global ID,IMEI,State,District,Cluster,Last Communication,Days Offline,Battery (V),Signal (dBm)"];
+        sitesArray.forEach((s: any) => {
+          csvRows.push(`${s.site_id},"${s.site_name}",${s.global_id},${s.imei},${s.state_name},${s.district_name},${s.cluster_name},${s.last_communication || 'Never'},${s.days_since_comm || 'Never'},${s.battery_v || 'N/A'},${s.signal_strength || 'N/A'}`);
+        });
+
+        const csvString = csvRows.join('\n');
+        const fileName = `Non_Comm_Sites_${new Date().getTime()}.csv`;
+        const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+        
+        await RNFS.writeFile(filePath, csvString, 'utf8');
+        await Share.open({
+          title: 'Export Non-Comm Sites',
+          url: `file://${filePath}`,
+          type: 'text/csv',
+          filename: fileName, 
+          showAppsToView: true,
+        });
+      }
+    } catch (error: any) {
+      if (error?.message !== 'User did not share') {
+        Alert.alert("Error", "Failed to generate export data.");
+        console.error(error);
+      }
+    }
+  };
 
   const getDaysColor = (days: number | null) => {
     if (days === null || days > 7) return '#dc2626'; // Red
@@ -116,8 +166,25 @@ export default function NonCommSitesScreen({ navigation }: Props) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Non-Communicating Sites</Text>
+        <Text style={styles.headerTitle}>Offline Sites</Text>
+
+        <View style={styles.headerIcons}>
+          <TouchableOpacity style={styles.iconBtn} onPress={handleExport}>
+            <Icon name="download" size={22} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => setFilterModalVisible(true)}>
+            <Icon name="filter" size={22} color="#fff" />
+            {Object.keys(activeFilters).length > 0 && <View style={styles.activeFilterDot} />}
+          </TouchableOpacity>
+        </View>
       </View>
+
+      <FilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        onApply={handleApplyFilters}
+        initialFilters={activeFilters}
+      />
 
       {buckets && (
         <View>
@@ -144,8 +211,8 @@ export default function NonCommSitesScreen({ navigation }: Props) {
         keyExtractor={(item, index) => item.imei + index}
         renderItem={renderSiteCard}
         contentContainerStyle={{ padding: 16 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => fetchData(1, true)} />}
-        onEndReached={() => hasNext && fetchData(page + 1)}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => fetchData(1, true, activeFilters)} />}
+        onEndReached={() => hasNext && fetchData(page + 1, false, activeFilters)}
         onEndReachedThreshold={0.5}
         ListFooterComponent={loading ? <ActivityIndicator size="small" color="#1e3c72" style={{ margin: 20 }} /> : null}
       />
@@ -155,11 +222,15 @@ export default function NonCommSitesScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f4f6f9' },
-  header: { backgroundColor: '#1e3c72', padding: 20, flexDirection: 'row', alignItems: 'center' },
-  backBtn: { paddingRight: 15 },
+  header: { backgroundColor: '#1e3c72', padding: 16, flexDirection: 'row', alignItems: 'center' },
+  backBtn: { paddingRight: 10 },
   backArrow: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700' },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700', flex: 1 },
   
+  headerIcons: { flexDirection: 'row', alignItems: 'center' },
+  iconBtn: { padding: 8, marginLeft: 5, position: 'relative' },
+  activeFilterDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444', borderWidth: 1, borderColor: '#1e3c72' },
+
   totalText: { fontSize: 16, fontWeight: '700', color: '#333', paddingHorizontal: 16, marginTop: 16 },
   bucketsContainer: { padding: 16, gap: 10 },
   bucketCard: { backgroundColor: '#fff', padding: 12, borderRadius: 8, minWidth: 90, alignItems: 'center', elevation: 2, borderTopWidth: 4 },

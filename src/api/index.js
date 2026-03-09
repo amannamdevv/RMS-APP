@@ -57,4 +57,8 @@ export const api = {
     });
     return response.data;
   },
+  getSiteRunningStatus: async (filters) => {
+    const response = await instance.get("/site-running-status/", { params: filters });
+    return response.data;
+  },
 };
