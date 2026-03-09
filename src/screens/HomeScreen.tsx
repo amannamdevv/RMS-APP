@@ -80,6 +80,14 @@ export default function HomeScreen({ navigation, route }: Props) {
       count: kpi.active_sites, // <-- Added Active Sites count here!
     },
     {
+      id: 'Distribution',
+      title: 'Site Distribution',
+      subtitle: 'EB / DG / Indoor / Hub',
+      icon: '🏢',
+      color: '#8b5cf6',
+      route: 'SiteDistribution' as const,
+    },
+    {
       id: 'Alarms',
       title: 'Active Alarms',
       subtitle: 'Critical Alerts',
@@ -176,7 +184,7 @@ export default function HomeScreen({ navigation, route }: Props) {
               activeOpacity={0.8}
               onPress={() => {
                 // <-- Dynamic Navigation handling added here
-                if (item.route === 'NonCommSites' || item.route === 'SiteRunningStatus') {
+                if (item.route === 'NonCommSites' || item.route === 'SiteRunningStatus' || item.route === 'SiteDistribution') {
                   navigation.navigate(item.route);
                 } else {
                   console.log(`Navigation to ${item.route} not yet built`);

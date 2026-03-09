@@ -10,6 +10,8 @@ import SiteStatusScreen from './src/screens/SiteStatusScreen';
 import SiteDetailsScreen from './src/screens/SiteDetailsScreen';
 import NonCommSitesScreen from './src/screens/NonCommSitesScreen';
 import SiteRunningStatusScreen from './src/screens/SiteRunningStatusScreen';
+import SiteDistributionScreen from './src/screens/SiteDistributionScreen';
+import SiteTypeDetailsScreen from './src/screens/SiteTypeDetailsScreen';
 
 // Define routes and expected parameters
 export type RootStackParamList = {
@@ -21,6 +23,8 @@ export type RootStackParamList = {
   SiteDetails: { imei: string, siteId: string };
   NonCommSites: undefined;
   SiteRunningStatus: undefined;
+  SiteDistribution: undefined;
+  SiteTypeDetails: { siteType: string, title: string, filters: any };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -40,6 +44,8 @@ export default function App() {
         <Stack.Screen name="SiteDetails" component={SiteDetailsScreen} />
         <Stack.Screen name="NonCommSites" component={NonCommSitesScreen} />
         <Stack.Screen name="SiteRunningStatus" component={SiteRunningStatusScreen} />
+        <Stack.Screen name="SiteDistribution" component={SiteDistributionScreen} />
+        <Stack.Screen name="SiteTypeDetails" component={SiteTypeDetailsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

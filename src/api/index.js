@@ -61,4 +61,12 @@ export const api = {
     const response = await instance.get("/site-running-status/", { params: filters });
     return response.data;
   },
+  getSiteDistributionCounts: async (filters) => {
+    const response = await instance.get("/site-distribution-counts/", { params: filters });
+    return response.data;
+  },
+  getSitesByType: async (siteType, filters) => {
+    const response = await instance.get(`/sites-by-type/${siteType}/`, { params: filters });
+    return response.data;
+  },
 };
