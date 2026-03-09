@@ -1,89 +1,25 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ─── Base URL ────────────────────────────────────────────────────────────────
-// Change this to your Django server URL if different
-export const BASE_URL = 'https://rms.shrotitele.com';
+const BASE_URL = 'http://192.168.1.40:8109/api/auth';
 
-const api = axios.create({
-  baseURL: BASE_URL,
-  timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-  withCredentials: true, // send cookies (session auth)
-});
+export const loginApi = async (username: string, password: string) => {
+  const res = await axios.post(`${BASE_URL}/login/`, { username, password });
+  if (res.data.token) {
+    await AsyncStorage.setItem('userToken', res.data.token);
+  }
+  return res.data;
+};
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+export const verifyOtpApi = async (otp: string, username: string) => {
+  // Notice we must pass username now!
+  const res = await axios.post(`${BASE_URL}/verify-otp/`, { otp, username });
+  if (res.data.token) {
+    await AsyncStorage.setItem('userToken', res.data.token);
+  }
+  return res.data;
+};
 
-export interface LoginResponse {
-  status: 'success' | 'error';
-  message: string;
-  redirect_url?: string;
-  skip_otp?: boolean;
-  whatsapp_url?: string;
-  fullname?: string;
-}
-
-export interface OtpResponse {
-  status: 'success' | 'error';
-  message: string;
-  redirect_url?: string;
-}
-
-export interface MeResponse {
-  status: 'success' | 'error';
-  user_id?: string;
-  username?: string;
-  fullname?: string;
-  role?: string;
-  ptye?: number;
-  login_time?: string;
-}
-
-// ─── Auth API ─────────────────────────────────────────────────────────────────
-
-/**
- * Step 1: Validate credentials.
- * POST /api/auth/login/
- */
-export async function loginApi(
-  username: string,
-  password: string,
-): Promise<LoginResponse> {
-  const { data } = await api.post<LoginResponse>('/api/auth/login/', {
-    username,
-    password,
-  });
-  return data;
-}
-
-/**
- * Step 2: Verify WhatsApp OTP.
- * POST /api/auth/verify-otp/
- */
-export async function verifyOtpApi(otp: string): Promise<OtpResponse> {
-  const { data } = await api.post<OtpResponse>('/api/auth/verify-otp/', {
-    otp,
-  });
-  return data;
-}
-
-/**
- * Logout current user.
- * POST /api/auth/logout/
- */
-export async function logoutApi(): Promise<void> {
-  await api.post('/api/auth/logout/');
-}
-
-/**
- * Get current session user info.
- * GET /api/auth/me/
- */
-export async function meApi(): Promise<MeResponse> {
-  const { data } = await api.get<MeResponse>('/api/auth/me/');
-  return data;
-}
-
-export default api;
+export const logoutApi = async () => {
+  await AsyncStorage.removeItem('userToken');
+};
