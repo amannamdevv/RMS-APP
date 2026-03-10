@@ -1,213 +1,144 @@
 import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  StatusBar,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
 import { logoutApi } from '../api/auth';
-import { api } from '../api'; 
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useFocusEffect } from '@react-navigation/native'; 
-import { RootStackParamList } from '../../App';
+import { api } from '../api';
+import { useFocusEffect } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Feather';
+import Sidebar from '../components/Sidebar';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
-
-export default function HomeScreen({ navigation, route }: Props) {
+export default function HomeScreen({ navigation, route }: any) {
   const { fullname } = route.params;
+  
+  // State to hold data for the 3 separate cards
+  const [siteKpi, setSiteKpi] = useState<any>(null);
+  const [runningKpi, setRunningKpi] = useState<any>(null);
+  const [distKpi, setDistKpi] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
+  const [isSidebarVisible, setSidebarVisible] = useState(false);
 
-  // State to hold the KPIs
-  const [kpi, setKpi] = useState({ total_sites: 0, active_sites: 0, non_active_sites: 0 });
-  const [loadingKpi, setLoadingKpi] = useState(true);
-
-  // Fetch KPIs whenever this screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      let isActive = true;
-
-      const fetchDashboardData = async () => {
-        setLoadingKpi(true);
-        try {
-          const res = await api.getSiteStatus({}, 1, 1);
-          if (res.status === 'success' && isActive) {
-            setKpi(res.data.kpi);
-          }
-        } catch (error) {
-          console.log('Failed to fetch home KPIs', error);
-        } finally {
-          if (isActive) setLoadingKpi(false);
-        }
-      };
-
       fetchDashboardData();
-
-      return () => {
-        isActive = false; 
-      };
     }, [])
   );
 
-  const handleLogout = async () => {
+  const fetchDashboardData = async () => {
+    setLoading(true);
     try {
-      await logoutApi();
-    } catch (e) {
-      console.log('Logout API failed, forcing logout anyway');
+      // Run all 3 API calls concurrently for speed
+      const [siteRes, runningRes, distRes] = await Promise.all([
+        api.getSiteStatus({}, 1, 1),
+        api.getSiteRunningStatus({}),
+        api.getSiteDistributionCounts({})
+      ]);
+
+      if (siteRes.status === 'success') setSiteKpi(siteRes.data.kpi);
+      if (runningRes.status === 'success') setRunningKpi(runningRes.counts);
+      if (distRes.status === 'success') setDistKpi(distRes.data);
+
+    } catch (error) {
+      console.log('Dashboard Data Fetch Error', error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await logoutApi();
     navigation.replace('Login');
   };
 
-  const menuItems = [
-    {
-      id: 'NonComm',
-      title: 'Offline Sites',
-      subtitle: 'Non-Communicating',
-      icon: '📡',
-      color: '#dc2626',
-      route: 'NonCommSites' as const,
-      count: kpi.non_active_sites, 
-    },
-    {
-      id: 'RunningStatus',
-      title: 'Running Status',
-      subtitle: 'EB / DG / Battery',
-      icon: '⚡',
-      color: '#01497C',
-      route: 'SiteRunningStatus' as const,
-      count: kpi.active_sites, // <-- Added Active Sites count here!
-    },
-    {
-      id: 'Distribution',
-      title: 'Site Distribution',
-      subtitle: 'EB / DG / Indoor / Hub',
-      icon: '🏢',
-      color: '#8b5cf6',
-      route: 'SiteDistribution' as const,
-    },
-    {
-      id: 'Alarms',
-      title: 'Active Alarms',
-      subtitle: 'Critical Alerts',
-      icon: '🚨',
-      color: '#ef4444',
-      route: 'Alarms' as const,
-    },
-    {
-      id: 'Reports',
-      title: 'Energy Reports',
-      subtitle: 'Mains & DG Logs',
-      icon: '📊',
-      color: '#10b981',
-      route: 'Reports' as const,
-    },
-    {
-      id: 'Settings',
-      title: 'Settings',
-      subtitle: 'App Preferences',
-      icon: '⚙️',
-      color: '#6366f1',
-      route: 'Settings' as const,
-    },
-  ];
+  // Helper to render mini-KPI columns inside cards
+  const renderMiniKPI = (label: string, value: any, color: string) => (
+    <View style={styles.miniKpi}>
+      <Text style={styles.miniLabel}>{label}</Text>
+      <Text style={[styles.miniValue, { color }]}>{value || 0}</Text>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1e3c72" />
       
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Hello, {fullname}</Text>
-          <Text style={styles.subtitle}>RMS Dashboard Overview</Text>
-        </View>
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
+        <TouchableOpacity onPress={() => setSidebarVisible(true)}>
+          <Icon name="menu" size={26} color="#fff" />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Home</Text>
+        <View style={{ width: 26 }} /> 
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeTitle}>System is Online</Text>
-          <Text style={styles.welcomeText}>
-            All monitoring services are running smoothly. Select a module below to view details.
-          </Text>
-        </View>
+      <Sidebar 
+        isVisible={isSidebarVisible} 
+        onClose={() => setSidebarVisible(false)} 
+        navigation={navigation} 
+        fullname={fullname}
+        handleLogout={handleLogout}
+      />
 
-        <Text style={styles.sectionTitle}>Modules</Text>
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
         
-        {/* BIG SITE STATUS CARD */}
-        <TouchableOpacity
-          style={styles.fullWidthCard}
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate('SiteStatus')}
-        >
-          <View style={styles.fullWidthCardHeader}>
-            <View style={[styles.iconContainer, { backgroundColor: '#1e3c7215', marginBottom: 0 }]}>
-              <Text style={styles.icon}>📊</Text>
-            </View>
-            <View style={{ marginLeft: 12, flex: 1 }}>
-              <Text style={styles.cardTitle}>Site Status</Text>
-              <Text style={styles.cardSubtitle}>Live KPIs & Health</Text>
-            </View>
-            <Text style={{ color: '#1e3c72', fontSize: 18 }}>→</Text>
+        {/* SITE STATUS CARD - Fixed Navigation */}
+        <TouchableOpacity style={styles.mainCard} onPress={() => navigation.navigate('SiteStatus')}>
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.cardHeader}>Site Status</Text>
+            <Text style={styles.arrowIcon}>→</Text>
           </View>
-
-          <View style={styles.kpiDivider} />
-
-          {loadingKpi ? (
-            <ActivityIndicator size="small" color="#1e3c72" style={{ marginVertical: 10 }} />
-          ) : (
-            <View style={styles.kpiRow}>
-              <View style={styles.kpiCol}>
-                <Text style={[styles.kpiNumber, { color: '#1e3c72' }]}>{kpi.total_sites}</Text>
-                <Text style={styles.kpiLabel}>Total</Text>
-              </View>
-              <View style={styles.kpiCol}>
-                <Text style={[styles.kpiNumber, { color: '#10b981' }]}>{kpi.active_sites}</Text>
-                <Text style={styles.kpiLabel}>Active</Text>
-              </View>
-              <View style={styles.kpiCol}>
-                <Text style={[styles.kpiNumber, { color: '#ef4444' }]}>{kpi.non_active_sites}</Text>
-                <Text style={styles.kpiLabel}>Down</Text>
-              </View>
+          
+          {loading ? <ActivityIndicator color="#1e3c72" /> : (
+            <View style={styles.statsRow}>
+              {renderMiniKPI('Total', siteKpi?.total_sites, '#1e3c72')}
+              {renderMiniKPI('Active', siteKpi?.active_sites, '#10b981')}
+              {renderMiniKPI('Down', siteKpi?.non_active_sites, '#ef4444')}
             </View>
           )}
         </TouchableOpacity>
 
-        <View style={styles.grid}>
-          {menuItems.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.card}
-              activeOpacity={0.8}
-              onPress={() => {
-                // <-- Dynamic Navigation handling added here
-                if (item.route === 'NonCommSites' || item.route === 'SiteRunningStatus' || item.route === 'SiteDistribution') {
-                  navigation.navigate(item.route);
-                } else {
-                  console.log(`Navigation to ${item.route} not yet built`);
-                }
-              }}
-            >
-              <View style={styles.cardIconRow}>
-                <View style={[styles.iconContainer, { backgroundColor: `${item.color}15` }]}>
-                  <Text style={styles.icon}>{item.icon}</Text>
-                </View>
-                
-                {item.count !== undefined && !loadingKpi && (
-                  <View style={[styles.badge, { backgroundColor: item.color }]}>
-                    <Text style={styles.badgeText}>{item.count}</Text>
-                  </View>
-                )}
+        {/* RUNNING STATUS CARD */}
+        <TouchableOpacity style={styles.mainCard} onPress={() => navigation.navigate('SiteRunningStatus')}>
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.cardHeader}>Running Status</Text>
+            <Text style={styles.arrowIcon}>→</Text>
+          </View>
+
+          {loading ? <ActivityIndicator color="#1e3c72" /> : (
+            <View style={styles.statsRow}>
+              {renderMiniKPI('SOEB', runningKpi?.total_soeb, '#10b981')}
+              {renderMiniKPI('SODG', runningKpi?.total_sodg, '#f59e0b')}
+              {renderMiniKPI('SOBT', runningKpi?.total_sobt, '#3b82f6')}
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* DISTRIBUTION CARD - Expanded to show all types */}
+        <TouchableOpacity style={styles.mainCard} onPress={() => navigation.navigate('SiteDistribution')}>
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.cardHeader}>Site Distribution</Text>
+            <Text style={styles.arrowIcon}>→</Text>
+          </View>
+
+          {loading ? <ActivityIndicator color="#1e3c72" /> : (
+            <>
+              {/* Row 1: BSC, Hub, Indoor, Outdoor */}
+              <View style={[styles.statsRow, { marginBottom: 15 }]}>
+                {renderMiniKPI('BSC', distKpi?.bsc, '#0ea5e9')}
+                {renderMiniKPI('Hub', distKpi?.hub, '#3b82f6')}
+                {renderMiniKPI('Indoor', distKpi?.indoor, '#8b5cf6')}
+                {renderMiniKPI('Outdoor', distKpi?.outdoor, '#ec4899')}
               </View>
-              
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+
+              {/* Row 2: EB, Non-EB, DG, Non-DG */}
+              <View style={styles.statsRow}>
+                {renderMiniKPI('EB', distKpi?.eb, '#10b981')}
+                {renderMiniKPI('No EB', distKpi?.non_eb, '#64748b')}
+                {renderMiniKPI('DG', distKpi?.dg, '#f59e0b')}
+                {renderMiniKPI('No DG', distKpi?.non_dg, '#ef4444')}
+              </View>
+            </>
+          )}
+        </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -215,31 +146,16 @@ export default function HomeScreen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f4f6f9' },
-  header: { backgroundColor: '#1e3c72', padding: 20, paddingTop: 30, paddingBottom: 30, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomLeftRadius: 24, borderBottomRightRadius: 24, elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
-  greeting: { color: '#fff', fontSize: 24, fontWeight: 'bold' }, subtitle: { color: '#c0c6e8', fontSize: 14, marginTop: 4 },
-  logoutBtn: { backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8 },
-  logoutText: { color: '#fff', fontWeight: '600', fontSize: 13 }, scrollContent: { padding: 20 },
-  welcomeCard: { backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 24, marginTop: -10, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
-  welcomeTitle: { fontSize: 18, fontWeight: '700', color: '#1e3c72', marginBottom: 8 }, welcomeText: { fontSize: 14, color: '#666', lineHeight: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#333', marginBottom: 16 }, 
+  header: { backgroundColor: '#1e3c72', padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   
-  fullWidthCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 16, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
-  fullWidthCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  kpiDivider: { height: 1, backgroundColor: '#f0f0f0', marginVertical: 12 },
-  kpiRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
-  kpiCol: { alignItems: 'center' },
-  kpiNumber: { fontSize: 22, fontWeight: '800', marginBottom: 2 },
-  kpiLabel: { fontSize: 12, color: '#888', fontWeight: '600', textTransform: 'uppercase' },
-
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  card: { backgroundColor: '#fff', width: '48%', borderRadius: 16, padding: 16, marginBottom: 16, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
+  mainCard: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 16, elevation: 3 },
+  cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 8, marginBottom: 12 },
+  cardHeader: { fontSize: 16, fontWeight: '700', color: '#1e3c72' },
+  arrowIcon: { fontSize: 18, color: '#1e3c72', fontWeight: 'bold' },
   
-  cardIconRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
-  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, minWidth: 24, alignItems: 'center' },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-  
-  iconContainer: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  icon: { fontSize: 24 }, 
-  cardTitle: { fontSize: 16, fontWeight: '700', color: '#1e3c72', marginBottom: 4 }, 
-  cardSubtitle: { fontSize: 12, color: '#8a8fa8' },
+  statsRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  miniKpi: { alignItems: 'center', flex: 1 },
+  miniLabel: { fontSize: 11, color: '#888', fontWeight: 'bold', marginBottom: 4 },
+  miniValue: { fontSize: 18, fontWeight: '800' }
 });

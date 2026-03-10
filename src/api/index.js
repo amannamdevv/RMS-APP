@@ -69,4 +69,10 @@ export const api = {
     const response = await instance.get(`/sites-by-type/${siteType}/`, { params: filters });
     return response.data;
   },
+  getSiteHealth: async (filters, page = 1, pageSize = 20) => {
+    const response = await instance.get("/site-health/", { 
+      params: { ...filters, page, page_size: pageSize } 
+    });
+    return response.data;
+  },
 };
