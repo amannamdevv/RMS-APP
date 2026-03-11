@@ -27,7 +27,7 @@ export type RootStackParamList = {
   SiteRunningStatus: undefined;
   SiteDistribution: undefined;
   SiteTypeDetails: { siteType: string, title: string, filters: any };
-  Dashboard: undefined;
+  Dashboard: { fullname: string };
   SiteHealth: undefined;
 };
 
