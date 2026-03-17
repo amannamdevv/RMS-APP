@@ -5,39 +5,30 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SplashScreen from './src/screens/SplashScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import OtpScreen from './src/screens/OtpScreen';
-import HomeScreen from './src/screens/HomeScreen';
-import SiteStatusScreen from './src/screens/SiteStatusScreen';
-import SiteDetailsScreen from './src/screens/SiteDetailsScreen';
-import NonCommSitesScreen from './src/screens/NonCommSitesScreen';
-import SiteRunningStatusScreen from './src/screens/SiteRunningStatusScreen';
-import SiteDistributionScreen from './src/screens/SiteDistributionScreen';
-import SiteTypeDetailsScreen from './src/screens/SiteTypeDetailsScreen';
+import HomeScreen from './src/screens/Home/HomeScreen';
+import SiteStatusScreen from './src/screens/Home/SiteStatusScreen';
+import SiteDetailsScreen from './src/screens/Home/SiteDetailsScreen';
+import NonCommSitesScreen from './src/screens/Home/NonCommSitesScreen';
+import SiteRunningStatusScreen from './src/screens/Home/SiteRunningStatusScreen';
+import SiteDistributionScreen from './src/screens/Home/SiteDistributionScreen';
+import SiteTypeDetailsScreen from './src/screens/Home/SiteTypeDetailsScreen';
 import DashboardScreen from './src/screens/Dashboard/DashboardScreen';
 import SiteHealthScreen from './src/screens/Dashboard/SiteHealthScreen';
+import SiteVitalsScreen from './src/screens/Dashboard/SiteVitalsScreen';
+import SiteAutomationScreen from './src/screens/Dashboard/SiteAutomationScreen';
+import LiveAlarmsScreen from './src/screens/Dashboard/LiveAlarmsScreen';
+import UptimeDetailsScreen from './src/screens/Dashboard/UptimeDetailsScreen';
+import UptimeReportScreen from './src/screens/Dashboard/UptimeReportScreen';
 
-// Define routes and expected parameters
-export type RootStackParamList = {
-  Splash: undefined;
-  Login: undefined;
-  Otp: { whatsappUrl: string, username: string };
-  Home: { fullname: string };
-  SiteStatus: undefined;
-  SiteDetails: { imei: string, siteId: string };
-  NonCommSites: undefined;
-  SiteRunningStatus: undefined;
-  SiteDistribution: undefined;
-  SiteTypeDetails: { siteType: string, title: string, filters: any };
-  Dashboard: { fullname: string };
-  SiteHealth: undefined;
-};
+import { RootStackParamList } from './src/types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator 
-        initialRouteName="Splash" 
+      <Stack.Navigator
+        initialRouteName="Splash"
         screenOptions={{ headerShown: false }} // Hides the default header
       >
         <Stack.Screen name="Splash" component={SplashScreen} />
@@ -52,6 +43,11 @@ export default function App() {
         <Stack.Screen name="SiteTypeDetails" component={SiteTypeDetailsScreen} />
         <Stack.Screen name="Dashboard" component={DashboardScreen} />
         <Stack.Screen name="SiteHealth" component={SiteHealthScreen} />
+        <Stack.Screen name="SiteVitals" component={SiteVitalsScreen} />
+        <Stack.Screen name="SiteAutomation" component={SiteAutomationScreen} />
+        <Stack.Screen name="LiveAlarms" component={LiveAlarmsScreen} />
+        <Stack.Screen name="UptimeDetails" component={UptimeDetailsScreen} />
+        <Stack.Screen name="UptimeReport" component={UptimeReportScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, SafeAreaView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../App';
-import { api } from '../api';
-import FilterModal from '../components/FilterModal';
+import { RootStackParamList } from '../../../App';
+import { api } from '../../api';
+import FilterModal from '../../components/FilterModal';
 import Icon from 'react-native-vector-icons/Feather';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SiteDistribution'>;
@@ -116,7 +116,7 @@ export default function SiteDistributionScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f6f9' },
+  container: { flex: 1, backgroundColor: '#c5d4eeff' },
   header: { backgroundColor: '#1e3c72', padding: 16, flexDirection: 'row', alignItems: 'center' },
   backBtn: { paddingRight: 10 },
   backArrow: { color: '#fff', fontSize: 24, fontWeight: 'bold' },

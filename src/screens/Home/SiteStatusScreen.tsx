@@ -13,11 +13,11 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Feather'; 
-import { api } from '../api';
+import Icon from 'react-native-vector-icons/Feather';
+import { api } from '../../api';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../App';
-import FilterModal from '../components/FilterModal'; 
+import { RootStackParamList } from '../../../App';
+import FilterModal from '../../components/FilterModal';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 
@@ -29,9 +29,12 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 // Helper to convert JSON array to CSV string
 const convertToCSV = (objArray: any[]) => {
   if (!objArray || objArray.length === 0) return '';
-  
-  // Extract headers dynamically from the first object's keys
-  const headers = Object.keys(objArray[0]);
+
+  // Extract all unique headers from all objects
+  const allHeadersSet = new Set<string>();
+  objArray.forEach(obj => Object.keys(obj).forEach(key => allHeadersSet.add(key)));
+  const headers = Array.from(allHeadersSet);
+
   const csvRows = [headers.join(',')];
 
   // Loop through rows
@@ -48,34 +51,27 @@ const convertToCSV = (objArray: any[]) => {
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SiteStatus'>;
-type Site = { site_id: string; site_name: string; global_id: string; imei: string; battery_v: string; last_communication: string; site_status: string; };
+type Site = {
+  site_id: string;
+  site_name: string;
+  global_id: string;
+  imei: string;
+  battery_v: string;
+  last_communication: string;
+  site_status: string;
+  commData?: any; // Added to store pre-loaded comm data
+};
 
 // --- SiteCard Component ---
 const SiteCard = ({ item, onSiteDetailsClick }: { item: Site; onSiteDetailsClick: () => void }) => {
-  
   const [expanded, setExpanded] = useState(false);
-  const [loadingDetails, setLoadingDetails] = useState(false);
-  const [commData, setCommData] = useState<any>(null);
 
-  const toggleDetails = async () => {
+  const toggleDetails = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    if (expanded) { setExpanded(false); return; }
-
-    if (!commData) {
-      setLoadingDetails(true);
-      try {
-        const res = await api.getCommunicationData(item.imei);
-        if (res.status === 'success') {
-          setCommData(res.data);
-        }
-      } catch (error) {
-        console.log('Error fetching comm details', error);
-      } finally {
-        setLoadingDetails(false);
-      }
-    }
-    setExpanded(true);
+    setExpanded(!expanded);
   };
+
+  const commData = item.commData;
 
   return (
     <View style={styles.card}>
@@ -86,7 +82,7 @@ const SiteCard = ({ item, onSiteDetailsClick }: { item: Site; onSiteDetailsClick
         </View>
       </View>
       <Text style={styles.siteName}>{item.site_name}</Text>
-      
+
       <View style={styles.infoRow}>
         <View style={styles.infoCol}><Text style={styles.infoLabel}>IMEI</Text><Text style={styles.infoValue}>{item.imei}</Text></View>
         <View style={styles.infoCol}><Text style={styles.infoLabel}>Global ID</Text><Text style={styles.infoValue}>{item.global_id || '-'}</Text></View>
@@ -98,9 +94,7 @@ const SiteCard = ({ item, onSiteDetailsClick }: { item: Site; onSiteDetailsClick
 
       {expanded && (
         <View style={styles.expandedContainer}>
-          {loadingDetails ? (
-            <ActivityIndicator size="small" color="#1e3c72" style={{ marginVertical: 10 }} />
-          ) : commData ? (
+          {commData ? (
             <>
               <View style={styles.commGrid}>
                 <View style={styles.commBox}><Text style={styles.commBoxTitle}>S  SMPS</Text><Text style={styles.commLabel}>MAKE: <Text style={styles.commValue}>{commData.SMPS_Make || '-'}</Text></Text><Text style={styles.commLabel}>LAST COM: <Text style={styles.commValue}>{commData.SMPS_LAST_COM || '-'}</Text></Text></View>
@@ -135,7 +129,7 @@ export default function SiteStatusScreen({ navigation }: Props) {
   const [hasNext, setHasNext] = useState(true);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Filter States
   const [statusFilter, setStatusFilter] = useState('');
   const [activeFilters, setActiveFilters] = useState({});
@@ -147,13 +141,34 @@ export default function SiteStatusScreen({ navigation }: Props) {
 
     try {
       const res = await api.getSiteStatus({ status: statusFilter, ...currentFilters }, pageNumber, 10);
-      if (res.status === 'success') {
-        setKpi(res.data.kpi);
-        setHasNext(res.data.pagination.has_next);
+
+      if (res && res.sites) {
+        // Use unfiltered_kpi if available to keep top-level counts accurate
+        if (res.unfiltered_kpi) {
+          setKpi(res.unfiltered_kpi);
+        } else if (res.kpi) {
+          setKpi(res.kpi);
+        }
+
+        // --- MERGE COMMUNICATION DATA INTO SITES ---
+        // Create a lookup map for faster access
+        const comms = res.communication || [];
+        const commMap: any = {};
+        comms.forEach((c: any) => { if (c.imei) commMap[c.imei] = c; });
+
+        // Map commData to each site by IMEI
+        const sitesWithComm = res.sites.map((site: any) => ({
+          ...site,
+          commData: commMap[site.imei] || null
+        }));
+
+        setHasNext(res.pagination?.has_next ?? false);
         setPage(pageNumber);
-        
-        if (replace) setSites(res.data.sites);
-        else setSites(prev => [...prev, ...res.data.sites]);
+
+        if (replace) setSites(sitesWithComm);
+        else setSites(prev => [...prev, ...sitesWithComm]);
+      } else {
+        console.log('Unexpected response structure:', res);
       }
     } catch (error) {
       console.log('Load error:', error);
@@ -183,7 +198,7 @@ export default function SiteStatusScreen({ navigation }: Props) {
   const handleExport = async () => {
     try {
       const res = await api.exportFilteredData({ status: statusFilter, ...activeFilters });
-      
+
       if (res.status === 'success') {
         const sitesArray = res.data.sites;
 
@@ -195,14 +210,14 @@ export default function SiteStatusScreen({ navigation }: Props) {
         const csvString = convertToCSV(sitesArray);
         const fileName = `Site_Status_${new Date().getTime()}.csv`;
         const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
-        
+
         await RNFS.writeFile(filePath, csvString, 'utf8');
-        
+
         await Share.open({
           title: 'Export Site Status',
           url: `file://${filePath}`,
           type: 'text/csv',
-          filename: fileName, 
+          filename: fileName,
           showAppsToView: true,
         });
       }
@@ -221,9 +236,9 @@ export default function SiteStatusScreen({ navigation }: Props) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
-        
+
         <Text style={styles.headerTitle}>Site Status</Text>
-        
+
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconBtn} onPress={handleExport}>
             <Icon name="download" size={22} color="#fff" />
@@ -254,17 +269,17 @@ export default function SiteStatusScreen({ navigation }: Props) {
         </TouchableOpacity>
         <TouchableOpacity style={[styles.kpiCard, statusFilter === 'down' && styles.kpiActive]} onPress={() => setStatusFilter('down')}>
           <Text style={[styles.kpiValue, { color: '#ef4444' }]}>{kpi.non_active_sites}</Text>
-          <Text style={styles.kpiLabel}>Down</Text>
+          <Text style={styles.kpiLabel}>Non-Active</Text>
         </TouchableOpacity>
       </View>
 
       <FlatList
         data={sites}
-        keyExtractor={(item) => item.imei}
+        keyExtractor={(item, index) => (item.imei || item.site_id || index).toString()}
         renderItem={({ item }) => (
-          <SiteCard 
-            item={item} 
-            onSiteDetailsClick={() => navigation.navigate('SiteDetails', { imei: item.imei, siteId: item.site_id })} 
+          <SiteCard
+            item={item}
+            onSiteDetailsClick={() => navigation.navigate('SiteDetails', { imei: item.imei, siteId: item.site_id })}
           />
         )}
         contentContainerStyle={{ padding: 16 }}
@@ -278,33 +293,33 @@ export default function SiteStatusScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f6f9' },
+  container: { flex: 1, backgroundColor: '#c5d4eeff' },
   header: { padding: 16, backgroundColor: '#1e3c72', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   backButton: { padding: 4 },
   backButtonText: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700' },
   placeholder: { width: 28 },
-  
+
   kpiContainer: { flexDirection: 'row', padding: 16, gap: 10 },
   kpiCard: { flex: 1, backgroundColor: '#fff', padding: 16, borderRadius: 12, alignItems: 'center', elevation: 2 },
   kpiActive: { borderWidth: 2, borderColor: '#1e3c72' },
   kpiValue: { fontSize: 24, fontWeight: '700', color: '#1e3c72' },
   kpiLabel: { fontSize: 12, color: '#666', marginTop: 4 },
-  
+
   card: { backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 12, elevation: 2 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   siteId: { fontSize: 16, fontWeight: '700', color: '#1e3c72' },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  activeBadge: { backgroundColor: '#d1fae5' }, 
+  activeBadge: { backgroundColor: '#d1fae5' },
   downBadge: { backgroundColor: '#fee2e2' },
   badgeText: { fontSize: 12, fontWeight: '600', color: '#333' },
   siteName: { fontSize: 16, fontWeight: '600', marginBottom: 12, color: '#111' },
-  
+
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   infoCol: { flex: 1 },
   infoLabel: { fontSize: 11, color: '#888', textTransform: 'uppercase', marginBottom: 2 },
   infoValue: { fontSize: 13, color: '#333', fontWeight: '500' },
-  
+
   // Expanded Section Styles
   expandedContainer: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#eee' },
   commGrid: { flexDirection: 'column', gap: 8, marginBottom: 10 },
@@ -316,7 +331,7 @@ const styles = StyleSheet.create({
   remarksTitle: { fontSize: 12, fontWeight: '700', color: '#0369a1', marginBottom: 4 },
   remarksText: { fontSize: 12, color: '#0c4a6e' },
   noDataText: { textAlign: 'center', color: '#888', fontSize: 13, marginVertical: 10 },
-  
+
   // Action Buttons Row
   actionRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, gap: 10 },
   actionBtnOutline: { flex: 1, paddingVertical: 10, borderRadius: 8, borderWidth: 1, borderColor: '#64748b', alignItems: 'center' },
