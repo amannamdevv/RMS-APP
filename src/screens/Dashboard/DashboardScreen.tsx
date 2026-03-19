@@ -120,7 +120,7 @@ export default function DashboardScreen({ navigation }: Props) {
       <StatusBar barStyle="light-content" backgroundColor="#1e3c72" />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => setSidebarVisible(true)}>
+        <TouchableOpacity onPress={() => setSidebarVisible(true)} style={{ padding: 5 }} hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}>
           <Icon name="menu" size={26} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>DASHBOARD</Text>

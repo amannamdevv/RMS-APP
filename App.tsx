@@ -19,6 +19,10 @@ import SiteAutomationScreen from './src/screens/Dashboard/SiteAutomationScreen';
 import LiveAlarmsScreen from './src/screens/Dashboard/LiveAlarmsScreen';
 import UptimeDetailsScreen from './src/screens/Dashboard/UptimeDetailsScreen';
 import UptimeReportScreen from './src/screens/Dashboard/UptimeReportScreen';
+import CommReportScreen from './src/screens/CommReportScreen';
+import UptimeDashboardScreen from './src/screens/UptimeDashboard';
+import UptimeSiteDetailsScreen from './src/screens/UptimeSiteDetails';
+import MasterReportScreen from './src/screens/MasterReport';
 
 import { RootStackParamList } from './src/types/navigation';
 
@@ -48,6 +52,10 @@ export default function App() {
         <Stack.Screen name="LiveAlarms" component={LiveAlarmsScreen} />
         <Stack.Screen name="UptimeDetails" component={UptimeDetailsScreen} />
         <Stack.Screen name="UptimeReport" component={UptimeReportScreen} />
+        <Stack.Screen name="CommReport" component={CommReportScreen} />
+        <Stack.Screen name="UptimeDashboard" component={UptimeDashboardScreen} />
+        <Stack.Screen name="UptimeSiteDetails" component={UptimeSiteDetailsScreen} />
+        <Stack.Screen name="MasterReport" component={MasterReportScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

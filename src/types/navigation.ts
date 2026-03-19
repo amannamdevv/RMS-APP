@@ -16,4 +16,9 @@ export type RootStackParamList = {
   LiveAlarms: { severity?: string } | undefined;
   UptimeDetails: { state_id: string, state_name: string };
   UptimeReport: undefined;
+  CommReport: undefined;
+  UptimeDashboard: undefined;
+  UptimeSiteDetails: { circle_id: string };
+  MasterReport: undefined;
+
 };

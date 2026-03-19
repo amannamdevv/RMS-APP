@@ -248,4 +248,83 @@ export const api = {
   },
 
 
+
+
+
+
+
+
+  getSlaCompliance: async (filters) => {
+    const response = await djangoApi.get('/api/uptime-sla/sla-compliance/', { params: filters });
+    return response.data;
+  },
+
+  getUptimeComparison: async (filters) => {
+    const response = await djangoApi.get('/api/uptime-sla/comparison/', { params: filters });
+    return response.data;
+  },
+
+  getCircleUptime: async (filters) => {
+    const response = await djangoApi.get('/api/uptime-sla/circle-wise/', { params: filters });
+    return response.data;
+  },
+
+  // 2. Opco-wise Uptime (Operator performance)
+  getOpcoUptime: async (filters) => {
+    const response = await djangoApi.get('/api/uptime-sla/opco-wise/', { params: filters });
+    return response.data;
+  },
+
+  // 3. Attribute Analysis (Downtime causes - like LVD, EB Fail, etc.)
+  getAttributeAnalysis: async (filters) => {
+    const response = await djangoApi.get('/api/uptime-sla/attribute-wise/', { params: filters });
+    return response.data;
+  },
+
+  // 4. Repeat Outages (Sites with multiple failures)
+  getRepeatOutages: async (filters, threshold = 2) => {
+    const response = await djangoApi.get('/api/uptime-sla/repeat-outages/', {
+      params: { ...filters, threshold }
+    });
+    return response.data;
+  },
+
+  // 5. Seasonal Preparedness (Summer/Monsoon checklist status)
+  getSeasonalPreparedness: async (filters, season = 'Summer') => {
+    const response = await djangoApi.get('/api/uptime-sla/seasonal-preparedness/', {
+      params: { ...filters, season }
+    });
+    return response.data;
+  },
+
+  // 6. Site-wise Detailed Uptime (Card list ke liye)
+  getSiteWiseUptime: async (filters) => {
+    const response = await djangoApi.get('/api/uptime-sla/site-wise/', { params: filters });
+    return response.data;
+  },
+
+  // 7. Monthly History (Trend chart ke liye)
+  getMonthlyUptimeHistory: async (filters, groupby = 'site') => {
+    const response = await djangoApi.get('/api/uptime-sla/monthly-history/', {
+      params: { ...filters, groupby }
+    });
+    return response.data;
+  },
+
+  // 8. Quarterly History
+  getQuarterlyUptimeHistory: async (filters, groupby = 'site') => {
+    const response = await djangoApi.get('/api/uptime-sla/quarterly-history/', {
+      params: { ...filters, groupby }
+    });
+    return response.data;
+  },
+
+  // 9. Master Report
+  getMasterReport: async (filters, page = 1, pageSize = 25) => {
+    const response = await djangoApi.get('/api/rms/master-report/', {
+      params: { ...filters, page, page_size: pageSize },
+    });
+    return response.data;
+  },
+
 };

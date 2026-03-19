@@ -11,6 +11,11 @@ import * as Animatable from 'react-native-animatable';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import FilterModal from '../../components/FilterModal';
+import Sidebar from '../../components/Sidebar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logoutApi } from '../../api/auth';
+import { RootStackParamList } from '../../types/navigation';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 // Helper to convert JSON array to CSV string
 const convertToCSV = (objArray: any[]) => {
@@ -29,7 +34,7 @@ const convertToCSV = (objArray: any[]) => {
   return csvRows.join('\n');
 };
 
-export default function UptimeReportScreen({ navigation }: any) {
+export default function UptimeReportScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'UptimeReport'>) {
     const [loading, setLoading] = useState(true);
     const [exporting, setExporting] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -37,6 +42,16 @@ export default function UptimeReportScreen({ navigation }: any) {
     const [activeFilters, setActiveFilters] = useState({});
     const [filterModalVisible, setFilterModalVisible] = useState(false);
     const [summary, setSummary] = useState<any>(null);
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const [fullname, setFullname] = useState('Administrator');
+
+    useEffect(() => {
+        const loadUser = async () => {
+            const name = await AsyncStorage.getItem('user_fullname');
+            if (name) setFullname(name);
+        };
+        loadUser();
+    }, []);
 
     const handleExport = async () => {
         setExporting(true);
@@ -140,8 +155,8 @@ export default function UptimeReportScreen({ navigation }: any) {
         <SafeAreaView style={styles.container}>
             <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.header}>
                 <View style={styles.topBar}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Icon name="arrow-left" size={24} color="#fff" />
+                    <TouchableOpacity onPress={() => setSidebarVisible(true)} hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}>
+                        <Icon name="menu" size={24} color="#fff" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>State-wise Uptime Report</Text>
                     
@@ -204,6 +219,18 @@ export default function UptimeReportScreen({ navigation }: any) {
                     }
                 />
             )}
+            <Sidebar
+                isVisible={isSidebarVisible}
+                onClose={() => setSidebarVisible(false)}
+                navigation={navigation}
+                fullname={fullname}
+                handleLogout={async () => {
+                    await AsyncStorage.removeItem('user_fullname');
+                    await logoutApi();
+                    navigation.replace('Login');
+                }}
+                activeRoute="UptimeReport"
+            />
         </SafeAreaView>
     );
 }

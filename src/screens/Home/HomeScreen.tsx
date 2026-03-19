@@ -80,7 +80,7 @@ export default function HomeScreen({ navigation, route }: any) {
 
       // Normalize Distribution counts (More robust parsing)
       let distRaw = distRes.counts || (distRes.status === 'success' ? (distRes.data?.counts || distRes.data) : (distRes.data || distRes));
-      
+
       // Handle the specific nested structure from the Django API (indoor_outdoor, bsc_hub, tower_types)
       let mergedDist: any = {};
       if (distRaw && typeof distRaw === 'object' && !Array.isArray(distRaw)) {
@@ -120,7 +120,7 @@ export default function HomeScreen({ navigation, route }: any) {
         const dgRaw = dgRes.counts || (dgRes.status === 'success' ? (dgRes.data?.counts || dgRes.data) : (dgRes.data || dgRes));
         mergedDist.dg = dgRaw.dg_sites ?? dgRaw.dg ?? dgRaw.total_dg ?? dgRaw.dg_count ?? 0;
       }
-      
+
       // Normalize EB Presence
       if (ebRes) {
         const ebRaw = ebRes.counts || (ebRes.status === 'success' ? (ebRes.data?.counts || ebRes.data) : (ebRes.data || ebRes));
@@ -167,7 +167,7 @@ export default function HomeScreen({ navigation, route }: any) {
       <StatusBar barStyle="light-content" backgroundColor="#1e3c72" />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => setSidebarVisible(true)} style={styles.menuIcon}>
+        <TouchableOpacity onPress={() => setSidebarVisible(true)} style={styles.menuIcon} hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}>
           <Icon name="menu" size={26} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Home</Text>

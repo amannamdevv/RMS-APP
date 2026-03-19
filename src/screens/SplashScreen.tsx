@@ -4,7 +4,7 @@ import * as Animatable from 'react-native-animatable';
 
 // 1. Import React Navigation types
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../App'; // Adjust this path if your App.tsx is in a different folder
+import { RootStackParamList } from '../types/navigation';
 
 // 2. Map the Props to your Navigation Stack
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;

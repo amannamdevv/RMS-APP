@@ -18,7 +18,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import {verifyOtpApi} from '../api/auth';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../App';
+import { RootStackParamList } from '../types/navigation';
 
 // Removed the rogue line from here!
 type Props = NativeStackScreenProps<RootStackParamList, 'Otp'>;
