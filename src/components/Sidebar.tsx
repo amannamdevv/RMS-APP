@@ -24,6 +24,8 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
   const isSitesSubActive = ['SiteVitals', 'NonCommSites'].includes(activeRoute || '');
   const isAlarmsSubActive = ['LiveAlarms'].includes(activeRoute || '');
   const isUptimeSubActive = ['UptimeDashboard', 'UptimeSiteDetails'].includes(activeRoute || '');
+  const isAssetSubActive = ['AssetHealth'].includes(activeRoute || '');
+  const isDCEMSubActive = ['DCEMAnalytics', 'DCEMMonthlyReport'].includes(activeRoute || '');
 
   useEffect(() => {
     if (isSitesSubActive) {
@@ -32,19 +34,19 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
       setExpandedMenu('Alarms Management');
     } else if (isUptimeSubActive) {
       setExpandedMenu('Uptime & SLA Analytics');
+    } else if (isAssetSubActive) {
+      setExpandedMenu('Asset Health');
+    } else if (isDCEMSubActive) {
+      setExpandedMenu('DCEM Analytics');
     }
   }, [activeRoute]);
 
   useEffect(() => {
     if (isVisible) {
-      // Auto-expand default menu if none expanded
-      if (!expandedMenu && !isSitesSubActive && !isAlarmsSubActive && !isUptimeSubActive) {
-        setExpandedMenu('Live Sites Status');
-      }
-
+      // Only slide open — do NOT auto-expand any menu
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 150, // Ultra-snappy
+        duration: 150,
         useNativeDriver: true,
         easing: Easing.out(Easing.quad)
       }).start();
@@ -196,7 +198,77 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 </View>
               )}
 
+              {/* ── DCEM Analytics ── */}
+              <TouchableOpacity
+                style={[styles.accordion, (isDCEMSubActive || expandedMenu === 'DCEM Analytics') && styles.itemActive]}
+                onPress={() => toggleAccordion('DCEM Analytics')}
+                activeOpacity={0.7}
+              >
+                <View style={styles.row}>
+                  <Icon name="bar-chart-2" size={20} color={(isDCEMSubActive || expandedMenu === 'DCEM Analytics') ? "#61A5C2" : "#fff"} style={styles.icon} />
+                  <Text style={[styles.text, (isDCEMSubActive || expandedMenu === 'DCEM Analytics') && { color: '#61A5C2' }]}>DCEM Analytics</Text>
+                </View>
+                <Icon name={expandedMenu === 'DCEM Analytics' ? "chevron-up" : "chevron-down"} size={16} color="#94a3b8" />
+              </TouchableOpacity>
 
+              {expandedMenu === 'DCEM Analytics' && (
+                <View style={styles.subMenu}>
+                  {[
+                    { name: 'DCEM Overview', route: 'DCEMAnalytics' },
+                    { name: 'Monthly Report', route: 'DCEMMonthlyReport' },
+                  ].map((item) => (
+                    <TouchableOpacity
+                      key={item.route}
+                      style={styles.subItem}
+                      onPress={() => navigateTo(item.route)}
+                    >
+                      <Text style={[styles.subText, activeRoute === item.route && styles.activeSubText]}>• {item.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={[styles.item, activeRoute === 'NocAnalytics' && styles.itemActive]}
+                onPress={() => navigateTo('NocAnalytics')}
+              >
+                <Icon name="pie-chart" size={20} color={activeRoute === 'NocAnalytics' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'NocAnalytics' && { color: '#61A5C2' }]}>NOC Analytics</Text>
+              </TouchableOpacity>
+
+              {/* Asset Health Management */}
+              <TouchableOpacity
+                style={[styles.accordion, (isAssetSubActive || expandedMenu === 'Asset Health') && styles.itemActive]}
+                onPress={() => toggleAccordion('Asset Health')}
+                activeOpacity={0.7}
+              >
+                <View style={styles.row}>
+                  <Icon name="activity" size={20} color={(isAssetSubActive || expandedMenu === 'Asset Health') ? "#61A5C2" : "#fff"} style={styles.icon} />
+                  <Text style={[styles.text, (isAssetSubActive || expandedMenu === 'Asset Health') && { color: '#61A5C2' }]}>Asset Health</Text>
+                </View>
+                <Icon name={expandedMenu === 'Asset Health' ? "chevron-up" : "chevron-down"} size={16} color="#94a3b8" />
+              </TouchableOpacity>
+
+              {expandedMenu === 'Asset Health' && (
+                <View style={styles.subMenu}>
+                  {[
+                    { name: 'Battery', tab: 'battery' },
+                    { name: 'DG', tab: 'dg' },
+                    { name: 'Rectifier', tab: 'rectifier' },
+                    { name: 'Solar', tab: 'solar' },
+                    { name: 'DG Battery', tab: 'dg_battery' },
+                    { name: 'LA (Lightning)', tab: 'lightning' },
+                  ].map((item) => (
+                    <TouchableOpacity
+                      key={item.tab}
+                      style={styles.subItem}
+                      onPress={() => navigateTo('AssetHealth', { tab: item.tab })}
+                    >
+                      <Text style={[styles.subText, activeRoute === 'AssetHealth' && styles.activeSubText]}>• {item.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
 
               {/* COMM REPORT */}
               <TouchableOpacity
@@ -205,7 +277,7 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 activeOpacity={0.7}
               >
                 <Icon name="file-text" size={20} color={activeRoute === 'CommReport' ? "#61A5C2" : "#fff"} style={styles.icon} />
-                <Text style={[styles.text, activeRoute === 'CommReport' && { color: '#61A5C2' }]}>Comm Report</Text>
+                <Text style={[styles.text, activeRoute === 'CommReport' && { color: '#61A5C2' }]}>Amf Smps Last Comm</Text>
               </TouchableOpacity>
 
               {/* MASTER REPORT */}
@@ -216,6 +288,41 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
               >
                 <Icon name="database" size={20} color={activeRoute === 'MasterReport' ? "#61A5C2" : "#fff"} style={styles.icon} />
                 <Text style={[styles.text, activeRoute === 'MasterReport' && { color: '#61A5C2' }]}>Master Report</Text>
+              </TouchableOpacity>
+
+              {/* Grid Power Analytics */}
+              <TouchableOpacity
+                style={styles.item}
+                onPress={() => {
+                  onClose();
+                  navigation.navigate('GridBilling');
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                  <Icon name="zap" size={22} color="#fff" />
+                  <Text style={styles.text}>Grid Analytics</Text>
+                </View>
+              </TouchableOpacity>
+
+
+              {/* MAPPING OF RESOURCES */}
+              <TouchableOpacity
+                style={[styles.item, activeRoute === 'ResourceMapping' && styles.itemActive]}
+                onPress={() => navigateTo('ResourceMapping')}
+                activeOpacity={0.7}
+              >
+                <Icon name="map" size={20} color={activeRoute === 'ResourceMapping' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'ResourceMapping' && { color: '#61A5C2' }]}>Mapping of Resources</Text>
+              </TouchableOpacity>
+
+              {/* SITE VARIATION ANALYSIS */}
+              <TouchableOpacity
+                style={[styles.item, activeRoute === 'SiteVariation' && styles.itemActive]}
+                onPress={() => navigateTo('SiteVariation')}
+                activeOpacity={0.7}
+              >
+                <Icon name="activity" size={20} color={activeRoute === 'SiteVariation' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'SiteVariation' && { color: '#61A5C2' }]}>Site Variation Analysis</Text>
               </TouchableOpacity>
 
             </ScrollView>

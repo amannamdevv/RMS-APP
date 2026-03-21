@@ -20,5 +20,15 @@ export type RootStackParamList = {
   UptimeDashboard: undefined;
   UptimeSiteDetails: { circle_id: string };
   MasterReport: undefined;
+  GridBilling: undefined;
+  ResourceMapping: undefined;
+  SiteVariation: undefined;
+  NocAnalytics: undefined;
+  AssetHealth: { tab?: string } | undefined;
+  DCEMAnalytics: undefined;
+  DCEMMonthlyReport: undefined;
+
+
+
 
 };

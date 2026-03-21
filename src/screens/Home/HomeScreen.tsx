@@ -50,7 +50,7 @@ export default function HomeScreen({ navigation, route }: any) {
     setLoading(true);
     try {
       const [siteRes, runningRes, distRes, offlineRes, dgRes, ebRes] = await Promise.all([
-        api.getSiteHealthCounts({}),
+        api.getSiteStatus({}),
         api.getSiteRunningStatus({}),
         api.getSiteDistributionCounts({}),
         api.getNonCommAging({}),
@@ -60,11 +60,15 @@ export default function HomeScreen({ navigation, route }: any) {
 
       // Normalize site status counts (handle direct response or success wrap)
       if (siteRes) {
-        const raw = siteRes.status === 'success' ? (siteRes.data?.kpi || siteRes.kpi || siteRes.data || siteRes) : siteRes;
+        // Robust extraction from siteRes
+        const raw = siteRes.status === 'success'
+          ? (siteRes.data?.kpi || siteRes.kpi || siteRes.data || siteRes)
+          : (siteRes.kpi || siteRes.data || siteRes);
+
         setSiteKpi({
-          total_sites: raw.total_sites ?? raw.total ?? raw.total_site ?? 0,
-          active_sites: raw.up_sites ?? raw.active_sites ?? raw.up ?? raw.active ?? 0,
-          non_active_sites: raw.down_sites ?? raw.non_active_sites ?? raw.down ?? raw.non_active ?? raw.offline ?? 0
+          total_sites: raw.total_sites ?? raw.total ?? raw.total_site ?? raw.count ?? 0,
+          active_sites: raw.active_sites ?? raw.up_sites ?? raw.up ?? raw.active ?? 0,
+          non_active_sites: raw.non_active_sites ?? raw.down_sites ?? raw.down ?? raw.non_active ?? raw.offline ?? 0
         });
       }
 

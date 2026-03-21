@@ -58,7 +58,8 @@ export const api = {
   },
 
   getSiteHealthCounts: async (filters) => {
-    const response = await djangoApi.get('/api/site-health/', { params: filters });
+    // Calling the endpoint that matches the provided backend logic
+    const response = await djangoApi.get('/api/site-health-status/', { params: filters });
     return response.data;
   },
 
@@ -145,11 +146,6 @@ export const api = {
   },
 
 
-  // Site Health Status
-  getSiteHealthCounts: async (filters) => {
-    const response = await djangoApi.get('/api/site-health-status/', { params: filters });
-    return response.data;
-  },
 
   getSiteHealth: async (filters, page = 1, pageSize = 20) => {
     const response = await djangoApi.get('/api/site-health-details/', {
@@ -215,12 +211,21 @@ export const api = {
     return response.data;
   },
 
-  // Live Alarms
+  // Live Alarms (SMPS)
+  getAlarms: async (filters, pageSize = 100) => {
+    const response = await djangoApi.get('/api/alarms/', { params: { ...filters, page_size: pageSize } });
+    return response.data;
+  },
   getSmpsAlarms: async (filters, pageSize = 100) => {
     const response = await djangoApi.get('/api/alarms/', { params: { ...filters, page_size: pageSize } });
     return response.data;
   },
 
+  // Live Alarms (TPMS/Fast Alarms)
+  getLiveFastAlarms: async (filters, pageSize = 100) => {
+    const response = await djangoApi.get('/api/live-fast-alarms/', { params: { ...filters, page_size: pageSize } });
+    return response.data;
+  },
   getRmsAlarms: async (filters, pageSize = 100) => {
     const response = await djangoApi.get('/api/live-fast-alarms/', { params: { ...filters, page_size: pageSize } });
     return response.data;
@@ -324,6 +329,84 @@ export const api = {
     const response = await djangoApi.get('/api/rms/master-report/', {
       params: { ...filters, page, page_size: pageSize },
     });
+    return response.data;
+  },
+
+  // 10. Resource Mapping / Site Summary
+  getSiteSummary: async (filters = {}) => {
+    const response = await djangoApi.get('/api/site-summary/', {
+      params: filters,
+    });
+    return response.data;
+  },
+
+  // 11. Site Variation Analysis
+  getSiteVariationData: async (filters = {}, page = 1, pageSize = 100) => {
+    const response = await djangoApi.get('/api/site-variation-data/', {
+      params: { ...filters, page, page_size: pageSize },
+    });
+    return response.data;
+  },
+  // NOC Analytics Data Fetcher
+  getNocAnalytics: async (period = 'today', filter = 'all') => {
+    const response = await djangoApi.get('/api/noc-analytics/', {
+      params: { period, filter }
+    });
+    return response.data;
+  },
+
+  // Asset Health — Battery
+  getAssetHealthBattery: async (params = {}) => {
+    const response = await djangoApi.get('/api/asset-health/battery/', { params });
+    return response.data;
+  },
+
+  // Asset Health — DG (Diesel Generator)
+  getAssetHealthDG: async (params = {}) => {
+    const response = await djangoApi.get('/api/asset-health/dg/', { params });
+    return response.data;
+  },
+
+  // Asset Health — Rectifier
+  getAssetHealthRectifier: async (params = {}) => {
+    const response = await djangoApi.get('/api/asset-health/rectifier/', { params });
+    return response.data;
+  },
+
+  // Asset Health — Solar
+  getAssetHealthSolar: async (params = {}) => {
+    const response = await djangoApi.get('/api/asset-health/solar/', { params });
+    return response.data;
+  },
+
+  // Asset Health — DG Battery
+  getAssetHealthDGBattery: async (params = {}) => {
+    const response = await djangoApi.get('/api/asset-health/dg-battery/', { params });
+    return response.data;
+  },
+
+  // Asset Health — Lightning Arrester
+  getAssetHealthLightning: async (params = {}) => {
+    const response = await djangoApi.get('/api/asset-health/lightning-arrester/', { params });
+    return response.data;
+  },
+
+
+  // DCEM Analytics (dcem2 page)  →  GET /api/dcem/analytics/
+  getDCEMAnalytics: async (params = {}) => {
+    const response = await djangoApi.get('/api/dcem/analytics/', { params });
+    return response.data;
+  },
+
+  // DCEM Monthly Report  →  GET /api/dcem/monthly-report/
+  getDCEMMonthlyReport: async (params = {}) => {
+    const response = await djangoApi.get('/api/dcem/monthly-report/', { params });
+    return response.data;
+  },
+
+  // Grid Power Analytics  →  GET /api/grid-analytics/
+  getGridAnalytics: async (params = {}) => {
+    const response = await djangoApi.get('/api/grid-analytics/', { params });
     return response.data;
   },
 
