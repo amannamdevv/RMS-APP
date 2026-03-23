@@ -410,4 +410,60 @@ export const api = {
     return response.data;
   },
 
+
+  // Energy Run Hours  →  GET /api/energy/run-hours/
+  getEnergyRunHours: async (params = {}) => {
+    const response = await djangoApi.get('/api/energy/run-hours/', { params });
+    return response.data;
+  },
+
+
+  // Site Logs  →  GET /api/site-logs/
+  getSiteLogs: async (params = {}) => {
+    const response = await djangoApi.get('/api/site-logs/', { params });
+    return response.data;
+  },
+
+  // Historical Alarms  →  GET /api/historical-alarms/
+  getHistoricalAlarms: async (params = {}) => {
+    const response = await djangoApi.get('/api/historical-alarms/', { params });
+    return response.data;
+  },
+
+
+  // Energy Run Hours Details  →  GET /api/energy/run-hours-details/
+  getEnergyRunHoursDetails: async (params = {}) => {
+    const response = await djangoApi.get('/api/energy/run-hours-details/', { params });
+    return response.data;
+  },
+
+
+
+  // GET /api/tt_tools/ — counts + my tickets list
+  getTTTools: async () => {
+    const response = await djangoApi.get('/api/tt_tools/');
+    return response.data;
+  },
+
+  // POST /api/tt_tools/ — raise new ticket
+  // FormData pass karo (already banaya hua)
+  submitTTTool: async (formData) => {
+    const response = await djangoApi.post('/api/tt_tools/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        // CSRF cookie djangoApi axios instance se automatically aata hai
+        // agar nahi aa raha to ye line add karo in djangoApi setup:
+        // 'X-CSRFToken': getCookie('csrftoken')
+      },
+    });
+    return response.data;
+  },
+
+  // GET /api/tool/ — equipment + full tickets + major repairs
+  getToolData: async (params = {}) => {
+    const response = await djangoApi.get('/api/tool/', { params });
+    return response.data;
+  },
+
+
 };

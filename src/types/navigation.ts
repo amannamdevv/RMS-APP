@@ -27,8 +27,12 @@ export type RootStackParamList = {
   AssetHealth: { tab?: string } | undefined;
   DCEMAnalytics: undefined;
   DCEMMonthlyReport: undefined;
+  EnergyRunHours: { preset?: string } | undefined;
+  EnergyRunHoursDetails: { category: string, date_from: string, date_to: string };
+  SiteLogs: undefined;
+  HistoricalAlarms: undefined;
 
-
-
+  TTTool: { initialTab?: 'equipment' | 'repairs' | 'tickets' | 'raise' };
+  SiteMaintenanceTool: { initialTab?: 'infra' | 'smps' | 'dcem' };
 
 };

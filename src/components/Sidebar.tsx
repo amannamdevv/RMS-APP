@@ -26,6 +26,9 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
   const isUptimeSubActive = ['UptimeDashboard', 'UptimeSiteDetails'].includes(activeRoute || '');
   const isAssetSubActive = ['AssetHealth'].includes(activeRoute || '');
   const isDCEMSubActive = ['DCEMAnalytics', 'DCEMMonthlyReport'].includes(activeRoute || '');
+  const isEnergySubActive = ['EnergyRunHours', 'EnergyRunHoursDetails'].includes(activeRoute || '');
+  const isHistorySubActive = ['SiteLogs', 'HistoricalAlarms'].includes(activeRoute || '');
+  const isMaintenanceSubActive = ['TTTool', 'SiteMaintenanceTool'].includes(activeRoute || '');
 
   useEffect(() => {
     if (isSitesSubActive) {
@@ -38,6 +41,12 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
       setExpandedMenu('Asset Health');
     } else if (isDCEMSubActive) {
       setExpandedMenu('DCEM Analytics');
+    } else if (isEnergySubActive) {
+      setExpandedMenu('Energy Management');
+    } else if (isHistorySubActive) {
+      setExpandedMenu('History Logs');
+    } else if (isMaintenanceSubActive) {
+      setExpandedMenu('Site Maintenance Tool');
     }
   }, [activeRoute]);
 
@@ -163,6 +172,15 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 </View>
               )}
 
+              {/* ENERGY MANAGEMENT */}
+              <TouchableOpacity
+                style={[styles.item, isEnergySubActive && styles.itemActive]}
+                onPress={() => navigateTo('EnergyRunHours')}
+              >
+                <Icon name="zap" size={20} color={isEnergySubActive ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, isEnergySubActive && { color: '#61A5C2' }]}>Energy Management</Text>
+              </TouchableOpacity>
+
               {/* UPTIME & SLA ANALYTICS DROP-DOWN (NEW) */}
               <TouchableOpacity style={styles.accordion} onPress={() => toggleAccordion('Uptime & SLA Analytics')} activeOpacity={0.7}>
                 <View style={styles.row}>
@@ -236,6 +254,56 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 <Text style={[styles.text, activeRoute === 'NocAnalytics' && { color: '#61A5C2' }]}>NOC Analytics</Text>
               </TouchableOpacity>
 
+
+              {/* SITE MAINTENANCE TOOL dropdown */}
+              <TouchableOpacity
+                style={styles.accordion}
+                onPress={() => toggleAccordion('Site Maintenance Tool')}
+                activeOpacity={0.7}
+              >
+                <View style={styles.row}>
+                  <Icon name="settings" size={20} color={(isMaintenanceSubActive || expandedMenu === 'Site Maintenance Tool') ? "#61A5C2" : "#fff"} style={styles.icon} />
+                  <Text style={[styles.text, (isMaintenanceSubActive || expandedMenu === 'Site Maintenance Tool') && { color: '#61A5C2' }]}>Site Maintenance Tool</Text>
+                </View>
+                <Icon
+                  name={expandedMenu === 'Site Maintenance Tool' ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color="#94a3b8"
+                />
+              </TouchableOpacity>
+
+              {expandedMenu === 'Site Maintenance Tool' && (
+                <View style={[styles.subMenu, { backgroundColor: '#0a1629' }]}>
+                  <TouchableOpacity style={styles.subItem} onPress={() => { onClose(); navigation.navigate('TTTool', { initialTab: 'equipment' }); }}>
+                    <Text style={styles.subText}>• Equipment History Log</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.subItem} onPress={() => { onClose(); navigation.navigate('SiteMaintenanceTool', { initialTab: 'infra' }); }}>
+                    <Text style={styles.subText}>• Infrastructure Upgrade</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.subItem} onPress={() => { onClose(); navigation.navigate('SiteMaintenanceTool', { initialTab: 'smps' }); }}>
+                    <Text style={styles.subText}>• SMPS</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.subItem} onPress={() => { onClose(); navigation.navigate('SiteMaintenanceTool', { initialTab: 'dcem' }); }}>
+                    <Text style={styles.subText}>• DCEM Calibration</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.subItem} onPress={() => { onClose(); navigation.navigate('TTTool', { initialTab: 'repairs' }); }}>
+                    <Text style={styles.subText}>• Major Repairs</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.subItem} onPress={() => { onClose(); navigation.navigate('TTTool', { initialTab: 'tickets' }); }}>
+                    <Text style={styles.subText}>• Raise Ticket & Closure</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* TT Tool (Quick Link) */}
+              <TouchableOpacity
+                style={[styles.item, activeRoute === 'TTTool' && !isMaintenanceSubActive && styles.itemActive]}
+                onPress={() => { onClose(); navigation.navigate('TTTool', { initialTab: 'raise' }); }}
+              >
+                <Icon name="tool" size={20} color={activeRoute === 'TTTool' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'TTTool' && { color: '#61A5C2' }]}>TT Tool</Text>
+              </TouchableOpacity>
+
               {/* Asset Health Management */}
               <TouchableOpacity
                 style={[styles.accordion, (isAssetSubActive || expandedMenu === 'Asset Health') && styles.itemActive]}
@@ -292,17 +360,38 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
 
               {/* Grid Power Analytics */}
               <TouchableOpacity
-                style={styles.item}
-                onPress={() => {
-                  onClose();
-                  navigation.navigate('GridBilling');
-                }}
+                style={[styles.item, activeRoute === 'GridBilling' && styles.itemActive]}
+                onPress={() => navigateTo('GridBilling')}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                  <Icon name="zap" size={22} color="#fff" />
-                  <Text style={styles.text}>Grid Analytics</Text>
-                </View>
+                <Icon name="zap" size={20} color={activeRoute === 'GridBilling' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'GridBilling' && { color: '#61A5C2' }]}>Grid Analytics</Text>
               </TouchableOpacity>
+
+              {/* HISTORY LOGS DROP-DOWN */}
+              <TouchableOpacity style={styles.accordion} onPress={() => toggleAccordion('History Logs')} activeOpacity={0.7}>
+                <View style={styles.row}>
+                  <Icon name="clock" size={20} color={(isHistorySubActive || expandedMenu === 'History Logs') ? "#61A5C2" : "#fff"} style={styles.icon} />
+                  <Text style={[styles.text, (isHistorySubActive || expandedMenu === 'History Logs') && { color: '#61A5C2' }]}>History Logs</Text>
+                </View>
+                <Icon name={expandedMenu === 'History Logs' ? "chevron-up" : "chevron-down"} size={16} color="#94a3b8" />
+              </TouchableOpacity>
+
+              {expandedMenu === 'History Logs' && (
+                <View style={styles.subMenu}>
+                  {[
+                    { name: 'Site Logs', route: 'SiteLogs' },
+                    { name: 'Historical Alarms', route: 'HistoricalAlarms' },
+                  ].map((item) => (
+                    <TouchableOpacity
+                      key={item.route}
+                      style={styles.subItem}
+                      onPress={() => navigateTo(item.route)}
+                    >
+                      <Text style={[styles.subText, activeRoute === item.route && styles.activeSubText]}>• {item.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
 
 
               {/* MAPPING OF RESOURCES */}

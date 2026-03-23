@@ -20,6 +20,8 @@ import SiteHealthScreen from './src/screens/Dashboard/SiteHealthScreen';
 import SiteVitalsScreen from './src/screens/Dashboard/SiteVitalsScreen';
 import SiteAutomationScreen from './src/screens/Dashboard/SiteAutomationScreen';
 import LiveAlarmsScreen from './src/screens/Dashboard/LiveAlarmsScreen';
+import EnergyRunHoursScreen from './src/screens/EnergyRunHoursScreen';
+import EnergyRunHoursDetailsScreen from './src/screens/EnergyRunHoursDetailsScreen';
 import UptimeDetailsScreen from './src/screens/Dashboard/UptimeDetailsScreen';
 import UptimeReportScreen from './src/screens/Dashboard/UptimeReportScreen';
 import CommReportScreen from './src/screens/CommReportScreen';
@@ -28,11 +30,17 @@ import UptimeSiteDetailsScreen from './src/screens/UptimeSiteDetails';
 import DCEMAnalyticsScreen from './src/screens/DCEMAnalyticsScreen';
 import DCEMMonthlyReportScreen from './src/screens/DCEMMonthlyReportScreen';
 import NocAnalyticsScreen from './src/screens/NocAnalytics';
+import TTToolScreen from './src/screens/TTToolScreen';
+import SiteMaintenanceToolScreen from './src/screens/SiteMaintenanceToolScreen';
 import Assethealthdashboard from './src/screens/Assethealthdashboard';
 import MasterReportScreen from './src/screens/MasterReport';
 import GridBillingScreen from './src/screens/GridBillingScreen';
 import ResourceMappingScreen from './src/screens/ResourceMappingScreen';
 import SiteVariationScreen from './src/screens/SiteVariationScreen';
+import SiteLogsScreen from './src/screens/SiteLogsScreen';
+import HistoricalAlarmsScreen from './src/screens/HistoricalAlarmsScreen';
+
+
 
 
 import { RootStackParamList } from './src/types/navigation';
@@ -66,6 +74,8 @@ export default function App() {
         <Stack.Screen name="SiteVitals" component={SiteVitalsScreen} />
         <Stack.Screen name="SiteAutomation" component={SiteAutomationScreen} />
         <Stack.Screen name="LiveAlarms" component={LiveAlarmsScreen} />
+        <Stack.Screen name="EnergyRunHours" component={EnergyRunHoursScreen} />
+        <Stack.Screen name="EnergyRunHoursDetails" component={EnergyRunHoursDetailsScreen} />
         <Stack.Screen name="UptimeDetails" component={UptimeDetailsScreen} />
         <Stack.Screen name="UptimeReport" component={UptimeReportScreen} />
 
@@ -76,11 +86,15 @@ export default function App() {
         <Stack.Screen name="DCEMAnalytics" component={DCEMAnalyticsScreen} />
         <Stack.Screen name="DCEMMonthlyReport" component={DCEMMonthlyReportScreen} />
         <Stack.Screen name="NocAnalytics" component={NocAnalyticsScreen} />
+        <Stack.Screen name="TTTool" component={TTToolScreen} />
+        <Stack.Screen name="SiteMaintenanceTool" component={SiteMaintenanceToolScreen} />
         <Stack.Screen name="AssetHealth" component={Assethealthdashboard} />
         <Stack.Screen name="MasterReport" component={MasterReportScreen} />
         <Stack.Screen name="GridBilling" component={GridBillingScreen} />
         <Stack.Screen name="ResourceMapping" component={ResourceMappingScreen} />
         <Stack.Screen name="SiteVariation" component={SiteVariationScreen} />
+        <Stack.Screen name="SiteLogs" component={SiteLogsScreen} />
+        <Stack.Screen name="HistoricalAlarms" component={HistoricalAlarmsScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>
