@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
   Image,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {loginApi} from '../../api/auth';
+import { loginApi } from '../../api';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 
@@ -60,7 +60,7 @@ export default function LoginScreen({ navigation }: Props) {
           navigation.navigate('Otp', {
             whatsappUrl: res.whatsapp_url ?? '',
             username: username.trim()
-        });
+          });
         }
       } else {
         setError(res.message || 'Login failed. Please try again.');
@@ -80,7 +80,7 @@ export default function LoginScreen({ navigation }: Props) {
       <StatusBar barStyle="light-content" backgroundColor="#0f0c29" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          
+
           <View style={styles.brandContainer}>
             <View style={styles.logoCircle}>
               <Image source={require('../../assets/logo.png')} style={styles.logoImage} resizeMode="contain" />
@@ -89,7 +89,7 @@ export default function LoginScreen({ navigation }: Props) {
             <Text style={styles.brandSubtitle}>Shroti Telecom Pvt. Ltd.</Text>
           </View>
 
-          <Animated.View style={[styles.card, {transform: [{translateX: shakeAnim}]}]}>
+          <Animated.View style={[styles.card, { transform: [{ translateX: shakeAnim }] }]}>
             <Text style={styles.cardTitle}>Welcome Back</Text>
             <Text style={styles.cardSubtitle}>Sign in to continue</Text>
 
@@ -100,7 +100,7 @@ export default function LoginScreen({ navigation }: Props) {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your User ID"
-                  placeholderTextColor="#8a8fa8"
+                  placeholderTextColor="#94a3b8"
                   value={username}
                   onChangeText={setUsername}
                   autoCapitalize="none"
@@ -117,7 +117,7 @@ export default function LoginScreen({ navigation }: Props) {
                 <TextInput
                   style={[styles.input, styles.inputPassword]}
                   placeholder="Enter your password"
-                  placeholderTextColor="#8a8fa8"
+                  placeholderTextColor="#94a3b8"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -138,7 +138,7 @@ export default function LoginScreen({ navigation }: Props) {
             ) : null}
 
             <TouchableOpacity style={[styles.loginBtn, loading && styles.loginBtnDisabled]} onPress={handleLogin} disabled={loading} activeOpacity={0.85}>
-              <LinearGradient colors={['#667eea', '#764ba2']} start={{x: 0, y: 0}} end={{x: 1, y: 0}} style={styles.loginBtnGradient}>
+              <LinearGradient colors={['#667eea', '#764ba2']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.loginBtnGradient}>
                 {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.loginBtnText}>Sign In →</Text>}
               </LinearGradient>
             </TouchableOpacity>
@@ -156,33 +156,33 @@ export default function LoginScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  flex: {flex: 1},
-  gradient: {flex: 1},
-  scrollContent: {flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40},
-  brandContainer: {alignItems: 'center', marginBottom: 32},
-  logoCircle: {width: 88, height: 88, borderRadius: 44, backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center', marginBottom: 12, elevation: 8},
-  logoImage: {width: 58, height: 58},
-  brandTitle: {fontSize: 20, fontWeight: '700', color: '#fff', textAlign: 'center', letterSpacing: 0.5},
-  brandSubtitle: {fontSize: 12, color: '#8a8fa8', marginTop: 4, textAlign: 'center'},
-  card: {backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)'},
-  cardTitle: {fontSize: 24, fontWeight: '800', color: '#fff', marginBottom: 4},
-  cardSubtitle: {fontSize: 14, color: '#8a8fa8', marginBottom: 28},
-  inputGroup: {marginBottom: 18},
-  label: {fontSize: 13, fontWeight: '600', color: '#c0c6e8', marginBottom: 8, letterSpacing: 0.5},
-  inputWrapper: {flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 14},
-  inputIcon: {fontSize: 16, marginRight: 10},
-  input: {flex: 1, height: 52, color: '#fff', fontSize: 15},
-  inputPassword: {paddingRight: 8},
-  eyeBtn: {padding: 4},
-  eyeIcon: {fontSize: 18},
-  errorBox: {flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(239, 68, 68, 0.15)', borderRadius: 10, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)'},
-  errorIcon: {fontSize: 14, marginRight: 8},
-  errorText: {color: '#fca5a5', fontSize: 13, flex: 1},
-  loginBtn: {marginTop: 8, borderRadius: 14, overflow: 'hidden'},
-  loginBtnDisabled: {opacity: 0.7},
-  loginBtnGradient: {height: 54, justifyContent: 'center', alignItems: 'center'},
-  loginBtnText: {color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 1},
-  infoBox: {marginTop: 20, backgroundColor: 'rgba(102, 126, 234, 0.1)', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: 'rgba(102, 126, 234, 0.2)'},
-  infoText: {color: '#a5b4fc', fontSize: 12, lineHeight: 18},
-  footer: {color: 'rgba(255,255,255,0.3)', fontSize: 11, textAlign: 'center', marginTop: 32},
+  flex: { flex: 1 },
+  gradient: { flex: 1 },
+  scrollContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 },
+  brandContainer: { alignItems: 'center', marginBottom: 32 },
+  logoCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center', marginBottom: 12, elevation: 8 },
+  logoImage: { width: 58, height: 58 },
+  brandTitle: { fontSize: 20, fontWeight: '700', color: '#fff', textAlign: 'center', letterSpacing: 0.5 },
+  brandSubtitle: { fontSize: 12, color: '#8a8fa8', marginTop: 4, textAlign: 'center' },
+  card: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  cardTitle: { fontSize: 24, fontWeight: '800', color: '#fff', marginBottom: 4 },
+  cardSubtitle: { fontSize: 14, color: '#8a8fa8', marginBottom: 28 },
+  inputGroup: { marginBottom: 18 },
+  label: { fontSize: 13, fontWeight: '600', color: '#c0c6e8', marginBottom: 8, letterSpacing: 0.5 },
+  inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 14 },
+  inputIcon: { fontSize: 16, marginRight: 10 },
+  input: { flex: 1, height: 52, color: '#fff', fontSize: 15 },
+  inputPassword: { paddingRight: 8 },
+  eyeBtn: { padding: 4 },
+  eyeIcon: { fontSize: 18 },
+  errorBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(239, 68, 68, 0.15)', borderRadius: 10, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
+  errorIcon: { fontSize: 14, marginRight: 8 },
+  errorText: { color: '#fca5a5', fontSize: 13, flex: 1 },
+  loginBtn: { marginTop: 8, borderRadius: 14, overflow: 'hidden' },
+  loginBtnDisabled: { opacity: 0.7 },
+  loginBtnGradient: { height: 54, justifyContent: 'center', alignItems: 'center' },
+  loginBtnText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 1 },
+  infoBox: { marginTop: 20, backgroundColor: 'rgba(102, 126, 234, 0.1)', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: 'rgba(102, 126, 234, 0.2)' },
+  infoText: { color: '#a5b4fc', fontSize: 12, lineHeight: 18 },
+  footer: { color: 'rgba(255,255,255,0.3)', fontSize: 11, textAlign: 'center', marginTop: 32 },
 });

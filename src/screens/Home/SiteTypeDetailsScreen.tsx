@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, SafeAreaView, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../../App';
+import type { RootStackParamList } from '../../types/navigation';
 import { api } from '../../api';
 import Icon from 'react-native-vector-icons/Feather';
 import FilterModal from '../../components/FilterModal';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import AppHeader from '../../components/AppHeader';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SiteTypeDetails'>;
 
@@ -139,23 +140,16 @@ export default function SiteTypeDetailsScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backArrow}>←</Text>
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>{title}</Text>
-            <Text style={styles.headerSub}>Displaying {data.length} sites</Text>
-        </View>
-        
-        <TouchableOpacity style={styles.iconBtn} onPress={handleExport} disabled={exporting}>
-          {exporting ? <ActivityIndicator size="small" color="#fff" /> : <Icon name="download" size={22} color="#fff" />}
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.iconBtn} onPress={() => setFilterModalVisible(true)}>
-          <Icon name="filter" size={22} color="#fff" />
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        title={title}
+        subtitle={`Displaying ${data.length} sites`}
+        leftAction="back"
+        onLeftPress={() => navigation.goBack()}
+        rightActions={[
+          { icon: exporting ? 'loader' : 'download', onPress: handleExport },
+          { icon: 'filter', onPress: () => setFilterModalVisible(true), badge: Object.keys(localFilters).length > 0 },
+        ]}
+      />
 
       <FilterModal
         visible={filterModalVisible}
@@ -185,12 +179,8 @@ export default function SiteTypeDetailsScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#c5d4eeff' },
-  header: { backgroundColor: '#1e3c72', padding: 16, flexDirection: 'row', alignItems: 'center' },
-  backBtn: { paddingRight: 10 },
-  backArrow: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  headerSub: { color: '#94a3b8', fontSize: 11 },
   iconBtn: { padding: 8 },
+  headerSub: { color: '#94a3b8', fontSize: 11 },
   card: { backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 12, elevation: 2 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   siteName: { fontSize: 16, fontWeight: '700', color: '#1e3c72', flex: 1 },

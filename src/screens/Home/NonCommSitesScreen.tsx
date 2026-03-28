@@ -4,12 +4,13 @@ import {
   ActivityIndicator, SafeAreaView, RefreshControl, Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../../App';
+import type { RootStackParamList } from '../../types/navigation';
 import { api } from '../../api';
 import Icon from 'react-native-vector-icons/Feather';
 import FilterModal from '../../components/FilterModal';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import AppHeader from '../../components/AppHeader';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NonCommSites'>;
 
@@ -90,6 +91,20 @@ const SiteCard = ({ item, onPress }: { item: any; onPress: () => void }) => {
         </View>
       </View>
 
+      {/* ── Last Alarms Section (New) ────────────────────────── */}
+      {item.last_alarms && item.last_alarms.length > 0 && (
+        <View style={styles.alarmSec}>
+          <Text style={styles.secTitle}>Recent Activity / Alarms</Text>
+          {item.last_alarms.slice(0, 3).map((a: any, i: number) => (
+            <View key={i} style={styles.alarmRow}>
+              <Icon name="alert-circle" size={10} color="#dc2626" />
+              <Text style={styles.alarmName}>{a.alarm_name}</Text>
+              <Text style={styles.alarmTime}>{a.create_dt.substring(5, 16)}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       {/* ── Duration Bar ────────────────────────────────────── */}
       {days !== null && (
         <View style={styles.durationRow}>
@@ -125,6 +140,7 @@ export default function NonCommSitesScreen({ navigation }: Props) {
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
@@ -150,15 +166,17 @@ export default function NonCommSitesScreen({ navigation }: Props) {
       }
 
       const listRes = await api.getNonCommSitesList(currentFilters, pageNum, 10);
-      // Django returns { sites: [...] } directly
-      if (listRes && listRes.sites) {
-        if (isRefresh) setSites(listRes.sites);
-        else setSites(prev => [...prev, ...listRes.sites]);
+      // Robustly handle different response structures ( {sites: [...]}, {data: {sites: [...]}}, [...] )
+      let listRaw = listRes.sites || (listRes.data?.sites || listRes.data || listRes);
+      if (Array.isArray(listRaw)) {
+        if (isRefresh) setSites(listRaw);
+        else setSites(prev => [...prev, ...listRaw]);
         
-        // If API doesn't provide has_next, we assume we have everything if sites.length < 10
-        setHasNext(listRes.has_next ?? listRes.sites.length === 10);
+        // Use pagination metadata if available, otherwise assume 10 items per page
+        const meta = listRes.meta || listRes.data?.meta || {};
+        setHasNext(listRes.has_next ?? meta.has_next ?? listRaw.length === 10);
         setPage(pageNum);
-        if (pageNum === 1) setTotalSites(listRes.total_sites ?? listRes.sites.length);
+        if (pageNum === 1) setTotalSites(listRes.total_sites ?? meta.total_records ?? listRaw.length);
       }
     } catch (e) {
       console.error('[NonComm] Fetch error:', e);
@@ -173,7 +191,7 @@ export default function NonCommSitesScreen({ navigation }: Props) {
   }, [activeFilters]);
 
   const handleExport = async () => {
-    setLoading(true);
+    setExporting(true);
     try {
       // 1. Fetch the Excel blob from backend
       const response = await api.exportNonCommSites(activeFilters);
@@ -196,13 +214,13 @@ export default function NonCommSitesScreen({ navigation }: Props) {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           filename: fileName,
         });
-        setLoading(false);
+        setExporting(false);
       };
       
       reader.readAsDataURL(response.data);
 
     } catch (error: any) {
-      setLoading(false);
+      setExporting(false);
       if (error?.message !== 'User did not share') {
         Alert.alert('Export Error', 'Failed to download Excel report from server.');
         console.error(error);
@@ -220,23 +238,17 @@ export default function NonCommSitesScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backArrow}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Offline Sites</Text>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconBtn} onPress={handleExport}>
-            <Icon name="download" size={22} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => setFilterModalVisible(true)}>
-            <Icon name="filter" size={22} color="#fff" />
-            {Object.keys(activeFilters).length > 0 && <View style={styles.filterDot} />}
-          </TouchableOpacity>
-        </View>
-      </View>
+      <View style={{ flex: 1, alignSelf: 'center', width: '100%', maxWidth: 650 }}>
+      <AppHeader
+        title="Offline Sites Analysis"
+        subtitle={`Aging View (${totalSites || 0})`}
+        leftAction="back"
+        onLeftPress={() => navigation.goBack()}
+        rightActions={[
+          { icon: exporting ? 'loader' : 'download', onPress: handleExport },
+          { icon: 'filter', onPress: () => setFilterModalVisible(true), badge: Object.keys(activeFilters).length > 0 },
+        ]}
+      />
 
       <FilterModal
         visible={filterModalVisible}
@@ -303,6 +315,7 @@ export default function NonCommSitesScreen({ navigation }: Props) {
           loading ? <ActivityIndicator size="small" color="#1e3c72" style={{ margin: 20 }} /> : null
         }
       />
+      </View>
     </SafeAreaView>
   );
 }
@@ -310,10 +323,6 @@ export default function NonCommSitesScreen({ navigation }: Props) {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#c5d4eeff' },
-  header: { backgroundColor: '#1e3c72', padding: 16, flexDirection: 'row', alignItems: 'center' },
-  backBtn: { paddingRight: 12 },
-  backArrow: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700', flex: 1 },
   headerIcons: { flexDirection: 'row', alignItems: 'center' },
   iconBtn: { padding: 8, marginLeft: 4, position: 'relative' },
   filterDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444' },
@@ -348,6 +357,11 @@ const styles = StyleSheet.create({
   durationBarBg: { flex: 1, height: 5, backgroundColor: '#e2e8f0', borderRadius: 3, overflow: 'hidden' },
   durationBarFill: { height: '100%', borderRadius: 3 },
   durationLabel: { fontSize: 10, fontWeight: '700', width: 65, textAlign: 'right' },
+  alarmSec: { padding: 10, backgroundColor: '#fff5f5', borderRadius: 8, marginTop: 12, borderWidth: 1, borderColor: '#fee2e2' },
+  secTitle: { fontSize: 10, fontWeight: '800', color: '#991b1b', textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5 },
+  alarmRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4, gap: 6 },
+  alarmName: { flex: 1, fontSize: 11, fontWeight: '600', color: '#450a0a' },
+  alarmTime: { fontSize: 10, color: '#991b1b', fontStyle: 'italic' },
 
   emptyBox: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32 },
   emptyTitle: { fontSize: 18, fontWeight: '700', color: '#1e3c72', marginTop: 16, marginBottom: 8 },

@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity,
-    ActivityIndicator, SafeAreaView, RefreshControl, Alert
+    ActivityIndicator, SafeAreaView, RefreshControl, Alert, ScrollView
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../../App';
+import type { RootStackParamList } from '../../types/navigation';
 import { api } from '../../api';
 import Icon from 'react-native-vector-icons/Feather';
 import FilterModal from '../../components/FilterModal';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import AppHeader from '../../components/AppHeader';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SiteVitals'>;
 
@@ -29,6 +30,16 @@ const convertToCSV = (objArray: any[]) => {
   }
   return csvRows.join('\n');
 };
+
+const VITAL_RANGES = [
+    { label: 'All', value: 'all', icon: 'list' },
+    { label: 'Critical', value: 'critical', icon: 'alert-circle' },
+    { label: 'At Risk', value: 'low', icon: 'shield-off' },
+    { label: 'Operational', value: 'normal', icon: 'check-circle' },
+    { label: 'Normal', value: 'high', icon: 'trending-up' },
+    { label: 'NA', value: 'na', icon: 'help-circle' },
+    { label: 'Offline', value: 'noncomm', icon: 'wifi-off' },
+];
 
 export default function SiteVitalsScreen({ route, navigation }: Props) {
     // Params like 'range' can come from Dashboard navigation
@@ -163,25 +174,16 @@ export default function SiteVitalsScreen({ route, navigation }: Props) {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Icon name="arrow-left" size={24} color="#fff" />
-                </TouchableOpacity>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.headerTitle}>Site Vitals</Text>
-                    <Text style={styles.headerSub}>{rangeLabel} ({totalSites})</Text>
-                </View>
-                
-                <TouchableOpacity style={styles.iconBtn} onPress={handleExport} disabled={exporting}>
-                    {exporting ? <ActivityIndicator size="small" color="#fff" /> : <Icon name="download" size={22} color="#fff" />}
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.iconBtn} onPress={() => setFilterModalVisible(true)}>
-                    <Icon name="filter" size={22} color="#fff" />
-                    {Object.keys(activeFilters).length > 0 && <View style={styles.activeFilterDot} />}
-                </TouchableOpacity>
-            </View>
+            <AppHeader
+                title="Site Vitals"
+                subtitle={rangeLabel}
+                leftAction="back"
+                onLeftPress={() => navigation.goBack()}
+                rightActions={[
+                    { icon: exporting ? 'loader' : 'download', onPress: handleExport },
+                    { icon: 'filter', onPress: () => setFilterModalVisible(true), badge: Object.keys(activeFilters).length > 0 },
+                ]}
+            />
 
             <FilterModal
                 visible={filterModalVisible}
@@ -189,6 +191,39 @@ export default function SiteVitalsScreen({ route, navigation }: Props) {
                 onApply={(f: any) => { setActiveFilters(f); setFilterModalVisible(false); }}
                 initialFilters={activeFilters}
             />
+
+            {/* Range Filters */}
+            <View style={styles.filterBar}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 8 }}>
+                    {VITAL_RANGES.map((r) => {
+                        const isActive = (activeFilters.range || 'all') === r.value;
+                        return (
+                            <TouchableOpacity
+                                key={r.value}
+                                style={[styles.filterPill, isActive && styles.filterPillActive]}
+                                onPress={() => setActiveFilters((prev: any) => ({ ...prev, range: r.value }))}
+                                activeOpacity={0.7}
+                            >
+                                <Icon 
+                                    name={r.icon} 
+                                    size={14} 
+                                    color={isActive ? '#fff' : '#64748b'} 
+                                    style={{ marginRight: 6 }} 
+                                />
+                                <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
+                                    {r.label}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            </View>
+
+            <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748b', textTransform: 'uppercase' }}>
+                    {totalSites} Sites showing in {rangeLabel}
+                </Text>
+            </View>
 
             <FlatList
                 data={data}
@@ -207,12 +242,16 @@ export default function SiteVitalsScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#c5d4eeff' },
-    header: { backgroundColor: '#1e3c72', padding: 16, flexDirection: 'row', alignItems: 'center' },
     backBtn: { paddingRight: 15 },
-    headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
     headerSub: { color: '#A9D6E5', fontSize: 12 },
     iconBtn: { padding: 8, position: 'relative' },
     activeFilterDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444', borderWidth: 1, borderColor: '#1e3c72' },
+
+    filterBar: { backgroundColor: '#fff', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+    filterPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#f1f5f9', marginHorizontal: 5, borderWidth: 1, borderColor: '#e2e8f0' },
+    filterPillActive: { backgroundColor: '#1e3c72', borderColor: '#1e3c72' },
+    filterText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
+    filterTextActive: { color: '#fff' },
 
     card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, elevation: 2 },
     cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

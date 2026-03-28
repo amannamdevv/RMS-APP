@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, SafeAreaView, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../../App';
+import type { RootStackParamList } from '../../types/navigation';
 import { api } from '../../api';
 import Icon from 'react-native-vector-icons/Feather';
 import FilterModal from '../../components/FilterModal';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import AppHeader from '../../components/AppHeader';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SiteRunningStatus'>;
 
@@ -131,75 +132,112 @@ export default function SiteRunningStatusScreen({ navigation }: Props) {
     const displayStatus = isOffline ? 'Non-Comm' : (item.running_status || 'Unknown');
     const color = getStatusColor(item.running_status, item.comm_status);
 
-    // Data Fix: Map the 3-phase voltages from backend
-    const mainsVal = `${item.mainsVoltR || 0}/${item.mainsVoltY || 0}/${item.mainsVoltB || 0}V`;
-    const dgVal = `${item.dgVoltR || 0}/${item.dgVoltY || 0}/${item.dgVoltB || 0}V`;
+    // Format 3-phase voltages with 2 decimal places matching the website display
+    const fmt = (v: any) => (v != null && v !== '' ? parseFloat(v).toFixed(2) : '0.00');
+    const mainsVolt = `${fmt(item.mainsVoltR)} / ${fmt(item.mainsVoltY)} / ${fmt(item.mainsVoltB)}`;
+    const dgVolt   = `${fmt(item.dgVoltR)} / ${fmt(item.dgVoltY)} / ${fmt(item.dgVoltB)}`;
+    const battVolt = item.btsBattVolt ? `${parseFloat(item.btsBattVolt).toFixed(2)} V` : '--';
+
+    // Last Updated: prefer last_updated, fall back to start_time
+    const lastUpdated = item.last_updated || item.start_time || null;
+    const lastUpdatedStr = lastUpdated
+      ? new Date(lastUpdated).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
+      : '--';
+
+    // Alarm description
+    const alarmDesc = item.alarm_description || item.alarm || '--';
 
     return (
       <TouchableOpacity
         style={[styles.card, { borderLeftColor: color }]}
         onPress={() => navigation.navigate('SiteDetails', { imei: item.imei, siteId: '' })}
+        activeOpacity={0.85}
       >
+        {/* Header: Site Name + IMEI + Status badge */}
         <View style={styles.cardHeader}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.siteName}>{item.site_name}</Text>
-            <Text style={styles.imei}>{item.imei}</Text>
+            <Text style={styles.siteName}>{item.site_name || '--'}</Text>
+            <Text style={styles.imei}>IMEI: {item.imei || '--'}</Text>
           </View>
           <View style={[styles.badge, { backgroundColor: color }]}>
             <Text style={styles.badgeText}>{displayStatus}</Text>
           </View>
         </View>
 
+        {/* Row 1: Session Duration + Comm Status */}
         <View style={styles.row}>
           <View style={styles.col}>
-            <Text style={styles.label}>Duration</Text>
-            <Text style={styles.val}>{item.current_session_duration}</Text>
+            <Text style={styles.label}>Session Duration</Text>
+            <Text style={styles.val}>{item.current_session_duration || '--'}</Text>
           </View>
           <View style={styles.col}>
-            <Text style={styles.label}>Battery</Text>
-            <Text style={styles.val}>{item.btsBattVolt ? `${item.btsBattVolt}V` : 'N/A'}</Text>
+            <Text style={styles.label}>Comm Status</Text>
+            <Text style={[styles.val, { color: isOffline ? '#dc2626' : '#16a34a' }]}>
+              {item.comm_status || '--'}
+            </Text>
           </View>
         </View>
 
+        {/* Row 2: Battery Voltage */}
         <View style={styles.row}>
           <View style={styles.col}>
-            <Text style={styles.label}>Mains (R/Y/B)</Text>
-            <Text style={styles.val}>{mainsVal}</Text>
+            <Text style={styles.label}>Battery Voltage</Text>
+            <Text style={styles.val}>{battVolt}</Text>
           </View>
-          <View style={styles.col}>
-            <Text style={styles.label}>DG (R/Y/B)</Text>
-            <Text style={styles.val}>{dgVal}</Text>
-          </View>
+          <View style={styles.col} />
         </View>
 
-        <View style={{ marginTop: 8 }}>
-          <Text style={styles.label}>Last Communication</Text>
-          <Text style={styles.val}>
-            {item.start_time ? item.start_time.replace('T', ' ').substring(0, 16) : 'N/A'}
-          </Text>
+        {/* Divider */}
+        <View style={styles.voltDivider} />
+
+        {/* Row 3: Mains Voltage (R/Y/B) */}
+        <View style={styles.voltRow}>
+          <Text style={styles.voltLabel}>Mains Voltage (R/Y/B)</Text>
+          <Text style={styles.voltVal}>{mainsVolt}</Text>
         </View>
+
+        {/* Row 4: DG Voltage (R/Y/B) */}
+        <View style={styles.voltRow}>
+          <Text style={styles.voltLabel}>DG Voltage (R/Y/B)</Text>
+          <Text style={styles.voltVal}>{dgVolt}</Text>
+        </View>
+
+        {/* Alarm Description */}
+        {alarmDesc !== '--' && (
+          <View style={styles.alarmBox}>
+            <Text style={styles.alarmIcon}>⚠</Text>
+            <Text style={styles.alarmText} numberOfLines={2}>{alarmDesc}</Text>
+          </View>
+        )}
+
+        {/* Last Updated */}
+        <View style={styles.lastUpdatedRow}>
+          <Text style={styles.label}>Last Updated</Text>
+          <Text style={styles.lastUpdatedVal}>{lastUpdatedStr}</Text>
+        </View>
+
+        {/* Run Hours Detail Button */}
+        <TouchableOpacity
+          style={styles.runHoursBtn}
+          onPress={() => navigation.navigate('SiteRunHoursDetail', { imei: item.imei, siteName: item.site_name || '' })}
+        >
+          <Text style={styles.runHoursBtnTxt}>Run Hours Detail →</Text>
+        </TouchableOpacity>
       </TouchableOpacity>
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backArrow}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Running Status</Text>
-
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconBtn} onPress={handleExport} disabled={exporting}>
-            {exporting ? <ActivityIndicator size="small" color="#fff" /> : <Icon name="download" size={22} color="#fff" />}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => setFilterModalVisible(true)}>
-            <Icon name="filter" size={22} color="#fff" />
-            {Object.keys(activeFilters).length > 0 && <View style={styles.activeFilterDot} />}
-          </TouchableOpacity>
-        </View>
-      </View>
+      <AppHeader
+        title="Running Status"
+        leftAction="back"
+        onLeftPress={() => navigation.goBack()}
+        rightActions={[
+          { icon: exporting ? 'loader' : 'download', onPress: handleExport },
+          { icon: 'filter', onPress: () => setFilterModalVisible(true), badge: Object.keys(activeFilters).length > 0 },
+        ]}
+      />
 
       <FilterModal
         visible={filterModalVisible}
@@ -209,14 +247,42 @@ export default function SiteRunningStatusScreen({ navigation }: Props) {
       />
 
       {!loading && (
-        <View style={styles.kpiGrid}>
-          <View style={[styles.kpiBox, { borderTopColor: '#3498db' }]}><Text style={styles.kpiVal}>{data.length}</Text><Text style={styles.kpiTitle}>Total</Text></View>
-          <View style={[styles.kpiBox, { borderTopColor: '#01497C' }]}><Text style={styles.kpiVal}>{counts.total_soeb || 0}</Text><Text style={styles.kpiTitle}>SOEB</Text></View>
-          <View style={[styles.kpiBox, { borderTopColor: '#468FAF' }]}><Text style={styles.kpiVal}>{counts.total_sobt || 0}</Text><Text style={styles.kpiTitle}>SOBT</Text></View>
-          <View style={[styles.kpiBox, { borderTopColor: '#ea580c' }]}><Text style={styles.kpiVal}>{counts.total_sodg || 0}</Text><Text style={styles.kpiTitle}>SODG</Text></View>
-          <View style={[styles.kpiBox, { borderTopColor: '#dc2626' }]}><Text style={styles.kpiVal}>{counts.total_non_active || 0}</Text><Text style={styles.kpiTitle}>Offline</Text></View>
+        <View style={styles.kpiContainer}>
+          <View style={styles.kpiRow}>
+            <View style={[styles.kpiBox, { borderLeftColor: '#3b82f6' }]}>
+              <Text style={styles.kpiTitle}>Total</Text>
+              <Text style={styles.kpiVal}>{data.length}</Text>
+            </View>
+            <View style={[styles.kpiBox, { borderLeftColor: '#10b981' }]}>
+              <Text style={styles.kpiTitle}>SOEB</Text>
+              <Text style={[styles.kpiVal, { color: '#10b981' }]}>{counts.total_soeb || 0}</Text>
+            </View>
+            <View style={[styles.kpiBox, { borderLeftColor: '#3b82f6' }]}>
+              <Text style={styles.kpiTitle}>SOBT</Text>
+              <Text style={[styles.kpiVal, { color: '#3b82f6' }]}>{counts.total_sobt || 0}</Text>
+            </View>
+          </View>
+          <View style={styles.kpiRow}>
+             <View style={[styles.kpiBox, { borderLeftColor: '#f59e0b' }]}>
+              <Text style={styles.kpiTitle}>SODG</Text>
+              <Text style={[styles.kpiVal, { color: '#f59e0b' }]}>{counts.total_sodg || 0}</Text>
+            </View>
+            <View style={[styles.kpiBox, { borderLeftColor: '#ef4444' }]}>
+              <Text style={styles.kpiTitle}>Offline</Text>
+              <Text style={[styles.kpiVal, { color: '#ef4444' }]}>{counts.total_non_active || 0}</Text>
+            </View>
+          </View>
         </View>
       )}
+
+      <TouchableOpacity
+        style={styles.smallCard}
+        onPress={() => navigation.navigate('BackupUsage')}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.smallCardTitle}>Today's Event</Text>
+        <Icon name="chevron-right" size={18} color="#fff" />
+      </TouchableOpacity>
 
       <View style={styles.tabsContainer}>
         {['All', 'SOEB', 'SOBT', 'SODG', 'Non-Comm'].map(tab => (
@@ -243,19 +309,29 @@ export default function SiteRunningStatusScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#c5d4eeff' },
-  header: { backgroundColor: '#1e3c72', padding: 16, flexDirection: 'row', alignItems: 'center' },
-  backBtn: { paddingRight: 10 },
-  backArrow: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700', flex: 1 },
-
   headerIcons: { flexDirection: 'row', alignItems: 'center' },
   iconBtn: { padding: 8, marginLeft: 5, position: 'relative' },
   activeFilterDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444', borderWidth: 1, borderColor: '#1e3c72' },
 
-  kpiGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 10, gap: 10, justifyContent: 'center' },
-  kpiBox: { backgroundColor: '#fff', padding: 12, borderRadius: 8, minWidth: '30%', alignItems: 'center', elevation: 2, borderTopWidth: 4 },
-  kpiVal: { fontSize: 20, fontWeight: '800', color: '#333' },
-  kpiTitle: { fontSize: 11, color: '#666', fontWeight: '600', marginTop: 2 },
+  kpiContainer: { paddingHorizontal: 16, paddingTop: 12, gap: 10 },
+  kpiRow: { flexDirection: 'row', gap: 10 },
+  kpiBox: { flex: 1, backgroundColor: '#fff', padding: 12, borderRadius: 10, elevation: 2, borderLeftWidth: 4, justifyContent: 'center' },
+  kpiVal: { fontSize: 20, fontWeight: '800', color: '#1e3c72' },
+  kpiTitle: { fontSize: 10, color: '#64748b', fontWeight: '700', marginBottom: 2, textTransform: 'uppercase' },
+
+  // Updated Today's Event Card (matching Run Hours Button style)
+  smallCard: { 
+    marginHorizontal: 16, 
+    marginVertical: 10, 
+    backgroundColor: '#01497C', 
+    borderRadius: 8, 
+    padding: 12, 
+    elevation: 3, 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+  },
+  smallCardTitle: { fontSize: 14, fontWeight: '700', color: '#fff' },
 
   tabsContainer: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 10, flexWrap: 'wrap', gap: 8 },
   tab: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 20, backgroundColor: '#e2e8f0' },
@@ -273,5 +349,24 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', marginTop: 8 },
   col: { flex: 1 },
   label: { fontSize: 11, color: '#888', textTransform: 'uppercase', marginBottom: 2 },
-  val: { fontSize: 13, color: '#333', fontWeight: '600' }
+  val: { fontSize: 13, color: '#333', fontWeight: '600' },
+
+  // Voltage rows (full-width label : value)
+  voltDivider: { height: 1, backgroundColor: '#f0f0f0', marginVertical: 10 },
+  voltRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  voltLabel: { fontSize: 11, color: '#64748b', fontWeight: '600', textTransform: 'uppercase' },
+  voltVal: { fontSize: 13, color: '#1e3c72', fontWeight: '700', fontVariant: ['tabular-nums'] },
+
+  // Alarm description
+  alarmBox: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#fff7ed', borderRadius: 8, padding: 8, marginTop: 10, gap: 6, borderLeftWidth: 3, borderLeftColor: '#f97316' },
+  alarmIcon: { fontSize: 14, color: '#f97316', lineHeight: 18 },
+  alarmText: { fontSize: 12, color: '#9a3412', flex: 1, fontWeight: '600' },
+
+  // Last Updated
+  lastUpdatedRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
+  lastUpdatedVal: { fontSize: 12, color: '#475569', fontWeight: '500' },
+
+  // Run Hours button
+  runHoursBtn: { marginTop: 10, backgroundColor: '#01497C', borderRadius: 8, paddingVertical: 9, alignItems: 'center' },
+  runHoursBtnTxt: { color: '#fff', fontWeight: '700', fontSize: 13 },
 });

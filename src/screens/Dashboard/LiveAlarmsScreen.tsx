@@ -10,6 +10,7 @@ import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
+import AppHeader from '../../components/AppHeader';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LiveAlarms'>;
 
@@ -192,24 +193,17 @@ export default function LiveAlarmsScreen({ route, navigation }: Props) {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Icon name="arrow-left" size={24} color="#fff" />
-                </TouchableOpacity>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.headerTitle}>Alarms Feed</Text>
-                    <Text style={styles.headerSub}>Live Monitoring ({alarms.length})</Text>
-                </View>
-
-                <TouchableOpacity style={styles.iconBtn} onPress={handleExport} disabled={exporting}>
-                    {exporting ? <ActivityIndicator size="small" color="#fff" /> : <Icon name="download" size={22} color="#fff" />}
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.iconBtn} onPress={() => setFilterModalVisible(true)}>
-                    <Icon name="filter" size={22} color="#fff" />
-                    {Object.keys(activeFilters).length > 0 && <View style={styles.activeFilterDot} />}
-                </TouchableOpacity>
-            </View>
+            <View style={{ flex: 1, alignSelf: 'center', width: '100%', maxWidth: 650 }}>
+            <AppHeader
+                title="Alarms Feed"
+                subtitle={`Live Monitoring (${alarms.length})`}
+                leftAction="back"
+                onLeftPress={() => navigation.goBack()}
+                rightActions={[
+                    { icon: exporting ? 'loader' : 'download', onPress: handleExport },
+                    { icon: 'filter', onPress: () => setFilterModalVisible(true), badge: Object.keys(activeFilters).length > 0 },
+                ]}
+            />
 
             <FilterModal
                 visible={filterModalVisible}
@@ -248,15 +242,14 @@ export default function LiveAlarmsScreen({ route, navigation }: Props) {
                     }
                 />
             )}
+            </View>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8fafc' },
-    header: { backgroundColor: '#1e3c72', padding: 16, flexDirection: 'row', alignItems: 'center' },
-    backBtn: { marginRight: 15 },
-    headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
+    container: { flex: 1, backgroundColor: '#c5d4eeff' },
+    backBtn: { marginRight: 8 },
     headerSub: { color: '#94a3b8', fontSize: 12 },
     iconBtn: { padding: 8, position: 'relative' },
     activeFilterDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444', borderWidth: 1, borderColor: '#1e3c72' },

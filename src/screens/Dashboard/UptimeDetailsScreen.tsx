@@ -7,7 +7,7 @@ import {
 import { api } from '../../api';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import LinearGradient from 'react-native-linear-gradient';
+import AppHeader from '../../components/AppHeader';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Animatable from 'react-native-animatable';
 import RNFS from 'react-native-fs';
@@ -35,6 +35,7 @@ export default function UptimeDetailsScreen({ route, navigation }: any) {
 
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [exporting, setExporting] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [filter, setFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -82,6 +83,7 @@ export default function UptimeDetailsScreen({ route, navigation }: any) {
             Alert.alert("No Data", "Export ke liye koi data nahi hai.");
             return;
         }
+        setExporting(true);
         try {
             const exportData = Object.entries(data.sites_data).map(([id, details]: [string, any]) => ({
                 id,
@@ -106,6 +108,8 @@ export default function UptimeDetailsScreen({ route, navigation }: any) {
             if (error?.message !== 'User did not share') {
                 Alert.alert("Export Error", "Export fail ho gaya.");
             }
+        } finally {
+            setExporting(false);
         }
     };
 
@@ -214,36 +218,30 @@ export default function UptimeDetailsScreen({ route, navigation }: any) {
 
     return (
         <SafeAreaView style={styles.container}>
-            <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.headerGradient}>
-                <View style={styles.topBar}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Icon name="arrow-left" size={24} color="#fff" />
-                    </TouchableOpacity>
-                    <View style={styles.headerInfo}>
-                        <Text style={styles.headerTitle} numberOfLines={1}>{state_name}</Text>
-                        <Text style={styles.headerSubtitle}>Overall: {data?.avg_uptime || 0}%</Text>
-                    </View>
-                    <TouchableOpacity onPress={handleExport} style={[styles.refreshBtn, { marginRight: 15 }]}>
-                        <Icon name="download" size={20} color="#fff" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={fetchUptime} style={styles.refreshBtn}>
-                        <Icon name="refresh-cw" size={18} color="#fff" />
-                    </TouchableOpacity>
-                </View>
+            <View style={{ flex: 1, alignSelf: 'center', width: '100%', maxWidth: 650 }}>
+            <AppHeader
+                title={state_name}
+                subtitle={`Overall: ${data?.avg_uptime || 0}%`}
+                leftAction="back"
+                onLeftPress={() => navigation.goBack()}
+                rightActions={[
+                    { icon: exporting ? 'loader' : 'download', onPress: handleExport },
+                    { icon: 'refresh-cw', onPress: fetchUptime }
+                ]}
+            />
 
-                <View style={styles.dateSelectorRow}>
-                    <TouchableOpacity style={styles.dateBtn} onPress={() => setShowStartPicker(true)}>
-                        <Text style={styles.dateBtnText}>{formatDate(startDate)}</Text>
-                    </TouchableOpacity>
-                    <Icon name="arrow-right" size={12} color="rgba(255,255,255,0.4)" />
-                    <TouchableOpacity style={styles.dateBtn} onPress={() => setShowEndPicker(true)}>
-                        <Text style={styles.dateBtnText}>{formatDate(endDate)}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.applyBtn} onPress={fetchUptime}>
-                        <Text style={styles.applyBtnText}>SEARCH</Text>
-                    </TouchableOpacity>
-                </View>
-            </LinearGradient>
+            <View style={[styles.dateSelectorRow, { backgroundColor: '#1e3c72', marginHorizontal: 12, marginTop: 12 }]}>
+                <TouchableOpacity style={styles.dateBtn} onPress={() => setShowStartPicker(true)}>
+                    <Text style={styles.dateBtnText}>{formatDate(startDate)}</Text>
+                </TouchableOpacity>
+                <Icon name="arrow-right" size={12} color="rgba(255,255,255,0.4)" />
+                <TouchableOpacity style={styles.dateBtn} onPress={() => setShowEndPicker(true)}>
+                    <Text style={styles.dateBtnText}>{formatDate(endDate)}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.applyBtn} onPress={fetchUptime}>
+                    <Text style={styles.applyBtnText}>SEARCH</Text>
+                </TouchableOpacity>
+            </View>
 
             {showStartPicker && (
                 <DateTimePicker value={startDate} mode="date" display="default" onChange={(e, d) => handleDateChange(e, d, true)} maximumDate={endDate} />
@@ -306,19 +304,15 @@ export default function UptimeDetailsScreen({ route, navigation }: any) {
                     }
                 />
             )}
+            </View>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f1f5f9' },
-    headerGradient: { padding: 12, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, elevation: 4 },
-    topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-    headerInfo: { flex: 1, marginLeft: 12 },
-    headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-    headerSubtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
+    container: { flex: 1, backgroundColor: '#c5d4eeff' },
     refreshBtn: { padding: 4 },
-    dateSelectorRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: 4 },
+    dateSelectorRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1e3c72', borderRadius: 10, padding: 4, elevation: 2 },
     dateBtn: { flex: 1, alignItems: 'center', paddingVertical: 6 },
     dateBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
     applyBtn: { backgroundColor: '#fff', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, marginLeft: 6 },

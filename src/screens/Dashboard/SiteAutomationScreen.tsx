@@ -8,6 +8,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import FilterModal from '../../components/FilterModal';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import AppHeader from '../../components/AppHeader';
 
 // Helper to convert JSON array to CSV string
 const convertToCSV = (objArray: any[]) => {
@@ -192,21 +193,15 @@ export default function SiteAutomationScreen({ navigation }: any) {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}><Icon name="arrow-left" size={24} color="#fff" /></TouchableOpacity>
-                <Text style={styles.headerTitle}>Automation Details</Text>
-                
-                <View style={styles.headerIcons}>
-                    <TouchableOpacity style={styles.iconBtn} onPress={handleExport} disabled={exporting}>
-                        {exporting ? <ActivityIndicator size="small" color="#fff" /> : <Icon name="download" size={22} color="#fff" />}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.iconBtn} onPress={() => setFilterModalVisible(true)}>
-                        <Icon name="filter" size={22} color="#fff" />
-                        {Object.keys(activeFilters).length > 0 && <View style={styles.activeFilterDot} />}
-                    </TouchableOpacity>
-                </View>
-            </View>
+            <AppHeader
+                title="Automation Details"
+                leftAction="back"
+                onLeftPress={() => navigation.goBack()}
+                rightActions={[
+                    { icon: exporting ? 'loader' : 'download', onPress: handleExport },
+                    { icon: 'filter', onPress: () => setFilterModalVisible(true), badge: Object.keys(activeFilters).length > 0 },
+                ]}
+            />
 
             <FilterModal 
                 visible={filterModalVisible} 
@@ -246,9 +241,7 @@ export default function SiteAutomationScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#c5d4ee' },
-    header: { backgroundColor: '#1e3c72', padding: 16, flexDirection: 'row', alignItems: 'center' },
-    headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', flex: 1, marginLeft: 15 },
+    container: { flex: 1, backgroundColor: '#c5d4eeff' },
     headerIcons: { flexDirection: 'row', alignItems: 'center' },
     iconBtn: { padding: 8, position: 'relative' },
     activeFilterDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444', borderWidth: 1, borderColor: '#1e3c72' },

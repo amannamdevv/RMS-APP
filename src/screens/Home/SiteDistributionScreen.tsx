@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, SafeAreaView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../../App';
+import type { RootStackParamList } from '../../types/navigation';
 import { api } from '../../api';
 import FilterModal from '../../components/FilterModal';
 import Icon from 'react-native-vector-icons/Feather';
+import AppHeader from '../../components/AppHeader';
+import RNFS from 'react-native-fs';
+import Share from 'react-native-share';
+import { Alert } from 'react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SiteDistribution'>;
 
 export default function SiteDistributionScreen({ navigation }: Props) {
   const [counts, setCounts] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [activeFilters, setActiveFilters] = useState({});
   const [filterModalVisible, setFilterModalVisible] = useState(false);
 
@@ -32,12 +37,53 @@ export default function SiteDistributionScreen({ navigation }: Props) {
     }
   };
 
+  const handleExport = async () => {
+    if (!counts) return;
+    setExporting(true);
+    try {
+      const rows = [
+        { Metric: 'Total Analyzed Sites', Count: counts.total },
+        { Metric: 'BSC Sites', Count: counts.bsc },
+        { Metric: 'Hub Sites', Count: counts.hub },
+        { Metric: 'Sites with DG', Count: counts.dg },
+        { Metric: 'Sites without DG', Count: counts.non_dg },
+        { Metric: 'Sites with EB', Count: counts.eb },
+        { Metric: 'Sites without EB', Count: counts.non_eb },
+        { Metric: 'Indoor Sites', Count: counts.indoor },
+        { Metric: 'Outdoor Sites', Count: counts.outdoor },
+        { Metric: 'RTT Sites', Count: counts.rtt },
+        { Metric: 'RTP Sites', Count: counts.rtp },
+        { Metric: 'GBT Sites', Count: counts.gbt },
+        { Metric: 'Small Cell Sites', Count: counts.small_cell },
+      ];
+
+      const csvString = `Metric,Count\n` + rows.map(r => `"${r.Metric}",${r.Count}`).join('\n');
+      const fileName = `Site_Distribution_${new Date().getTime()}.csv`;
+      const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+
+      await RNFS.writeFile(filePath, csvString, 'utf8');
+      await Share.open({
+        title: 'Export Site Distribution',
+        url: `file://${filePath}`,
+        type: 'text/csv',
+        filename: fileName,
+        showAppsToView: true,
+      });
+    } catch (error: any) {
+      if (error?.message !== 'User did not share') {
+        Alert.alert('Export Error', 'Failed to generate CSV.');
+      }
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const MetricCard = ({ title, val1, label1, key1, val2, label2, key2, color1, color2 }: any) => (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>{title}</Text>
       <View style={styles.row}>
         <TouchableOpacity 
-            style={[styles.box, { backgroundColor: color1 + '15', borderColor: color1 }]}
+            style={[styles.box, { borderTopColor: color1 }]}
             onPress={() => navigation.navigate('SiteTypeDetails', { siteType: key1, title: label1, filters: activeFilters })}
         >
           <Text style={[styles.boxVal, { color: color1 }]}>{val1 || 0}</Text>
@@ -45,7 +91,7 @@ export default function SiteDistributionScreen({ navigation }: Props) {
         </TouchableOpacity>
         
         <TouchableOpacity 
-            style={[styles.box, { backgroundColor: color2 + '15', borderColor: color2 }]}
+            style={[styles.box, { borderTopColor: color2 }]}
             onPress={() => navigation.navigate('SiteTypeDetails', { siteType: key2, title: label2, filters: activeFilters })}
         >
           <Text style={[styles.boxVal, { color: color2 }]}>{val2 || 0}</Text>
@@ -57,14 +103,15 @@ export default function SiteDistributionScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Text style={styles.backArrow}>←</Text></TouchableOpacity>
-        <Text style={styles.headerTitle}>Site Distribution</Text>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => setFilterModalVisible(true)}>
-          <Icon name="filter" size={22} color="#fff" />
-          {Object.keys(activeFilters).length > 0 && <View style={styles.activeFilterDot} />}
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        title="Site Distribution"
+        leftAction="back"
+        onLeftPress={() => navigation.goBack()}
+        rightActions={[
+          { icon: exporting ? 'loader' : 'download', onPress: handleExport },
+          { icon: 'filter', onPress: () => setFilterModalVisible(true), badge: Object.keys(activeFilters).length > 0 },
+        ]}
+      />
 
       <FilterModal
         visible={filterModalVisible}
@@ -117,21 +164,17 @@ export default function SiteDistributionScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#c5d4eeff' },
-  header: { backgroundColor: '#1e3c72', padding: 16, flexDirection: 'row', alignItems: 'center' },
-  backBtn: { paddingRight: 10 },
-  backArrow: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700', flex: 1 },
   iconBtn: { padding: 8, position: 'relative' },
   activeFilterDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444', borderWidth: 1, borderColor: '#1e3c72' },
   
   content: { padding: 16 },
-  totalText: { fontSize: 16, fontWeight: '700', color: '#333', marginBottom: 16 },
-  card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 16, elevation: 2 },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: '#1e3c72', marginBottom: 12 },
+  totalText: { fontSize: 18, fontWeight: '800', color: '#1e3c72', marginBottom: 20, textAlign: 'center' },
+  card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 16, elevation: 3 },
+  cardTitle: { fontSize: 13, fontWeight: '700', color: '#64748b', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
   row: { flexDirection: 'row', gap: 12 },
-  box: { flex: 1, padding: 16, borderRadius: 8, borderWidth: 1, alignItems: 'center' },
+  box: { flex: 1, backgroundColor: '#f8fafc', padding: 16, borderRadius: 10, alignItems: 'center', borderTopWidth: 4, elevation: 1 },
+  boxVal: { fontSize: 22, fontWeight: '800', marginBottom: 4 },
+  boxLabel: { fontSize: 11, fontWeight: '700', color: '#64748b', textTransform: 'uppercase' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  gridBox: { width: '48%', padding: 16, borderRadius: 8, borderWidth: 1, alignItems: 'center' },
-  boxVal: { fontSize: 24, fontWeight: '800', marginBottom: 4 },
-  boxLabel: { fontSize: 12, fontWeight: '600', color: '#666', textTransform: 'uppercase' },
+  gridBox: { width: '48.5%', backgroundColor: '#f8fafc', borderRadius: 12, padding: 16, alignItems: 'center', borderTopWidth: 4, elevation: 1 },
 });

@@ -20,6 +20,7 @@ import { RootStackParamList } from '../../types/navigation';
 import FilterModal from '../../components/FilterModal';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import AppHeader from '../../components/AppHeader';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -129,6 +130,7 @@ export default function SiteStatusScreen({ navigation }: Props) {
   const [hasNext, setHasNext] = useState(true);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Filter States
   const [statusFilter, setStatusFilter] = useState('');
@@ -196,59 +198,69 @@ export default function SiteStatusScreen({ navigation }: Props) {
   };
 
   const handleExport = async () => {
+    if (exporting) return;
     try {
-      const res = await api.exportFilteredData({ status: statusFilter, ...activeFilters });
+      setExporting(true);
 
-      if (res.status === 'success') {
-        const sitesArray = res.data.sites;
+      // Fetch all filtered data in one shot (large page size)
+      const res = await api.getSiteStatus(
+        { status: statusFilter, ...activeFilters },
+        1,
+        10000
+      );
 
-        if (!sitesArray || sitesArray.length === 0) {
-          Alert.alert("No Data", "There is no data to export with the current filters.");
-          return;
-        }
+      const sitesArray = res?.sites;
 
-        const csvString = convertToCSV(sitesArray);
-        const fileName = `Site_Status_${new Date().getTime()}.csv`;
-        const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
-
-        await RNFS.writeFile(filePath, csvString, 'utf8');
-
-        await Share.open({
-          title: 'Export Site Status',
-          url: `file://${filePath}`,
-          type: 'text/csv',
-          filename: fileName,
-          showAppsToView: true,
-        });
+      if (!sitesArray || sitesArray.length === 0) {
+        Alert.alert('No Data', 'There is no data to export with the current filters.');
+        return;
       }
+
+      // Build clean flat rows for CSV
+      const csvRows = sitesArray.map((site: any) => ({
+        'Site ID': site.site_id || '',
+        'Site Name': site.site_name || '',
+        'Global ID': site.global_id || '',
+        'IMEI': site.imei || '',
+        'Status': site.site_status || '',
+        'Battery (V)': site.battery_v || '',
+        'Last Communication': site.last_communication || '',
+      }));
+
+      const csvString = convertToCSV(csvRows);
+      const fileName = `Site_Status_${new Date().getTime()}.csv`;
+      const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+
+      await RNFS.writeFile(filePath, csvString, 'utf8');
+
+      await Share.open({
+        title: 'Export Site Status',
+        url: `file://${filePath}`,
+        type: 'text/csv',
+        filename: fileName,
+        showAppsToView: true,
+      });
     } catch (error: any) {
       if (error?.message !== 'User did not share') {
-        Alert.alert("Error", "Failed to generate or open export data.");
+        Alert.alert('Export Error', 'Failed to generate or download CSV.');
         console.error(error);
       }
+    } finally {
+      setExporting(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>Site Status</Text>
-
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconBtn} onPress={handleExport}>
-            <Icon name="download" size={22} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => setFilterModalVisible(true)}>
-            <Icon name="filter" size={22} color="#fff" />
-            {Object.keys(activeFilters).length > 0 && <View style={styles.activeFilterDot} />}
-          </TouchableOpacity>
-        </View>
-      </View>
+      <AppHeader
+        title="Site Status"
+        leftAction="back"
+        onLeftPress={() => navigation.goBack()}
+        rightActions={[
+          { icon: exporting ? 'loader' : 'download', onPress: handleExport },
+          { icon: 'filter', onPress: () => setFilterModalVisible(true), badge: Object.keys(activeFilters).length > 0 },
+        ]}
+      />
 
       <FilterModal
         visible={filterModalVisible}
@@ -259,17 +271,26 @@ export default function SiteStatusScreen({ navigation }: Props) {
 
       {/* KPIs */}
       <View style={styles.kpiContainer}>
-        <TouchableOpacity style={[styles.kpiCard, statusFilter === '' && styles.kpiActive]} onPress={() => setStatusFilter('')}>
+        <TouchableOpacity 
+          style={[styles.kpiCard, { borderTopColor: '#3b82f6' }, statusFilter === '' && styles.kpiActive]} 
+          onPress={() => setStatusFilter('')}
+        >
           <Text style={styles.kpiValue}>{kpi.total_sites}</Text>
           <Text style={styles.kpiLabel}>Total</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.kpiCard, statusFilter === 'active' && styles.kpiActive]} onPress={() => setStatusFilter('active')}>
+        <TouchableOpacity 
+          style={[styles.kpiCard, { borderTopColor: '#10b981' }, statusFilter === 'active' && styles.kpiActive]} 
+          onPress={() => setStatusFilter('active')}
+        >
           <Text style={[styles.kpiValue, { color: '#10b981' }]}>{kpi.active_sites}</Text>
           <Text style={styles.kpiLabel}>Active</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.kpiCard, statusFilter === 'down' && styles.kpiActive]} onPress={() => setStatusFilter('down')}>
+        <TouchableOpacity 
+          style={[styles.kpiCard, { borderTopColor: '#ef4444' }, statusFilter === 'down' && styles.kpiActive]} 
+          onPress={() => setStatusFilter('down')}
+        >
           <Text style={[styles.kpiValue, { color: '#ef4444' }]}>{kpi.non_active_sites}</Text>
-          <Text style={styles.kpiLabel}>Non-Active</Text>
+          <Text style={styles.kpiLabel}>Offline</Text>
         </TouchableOpacity>
       </View>
 
@@ -294,17 +315,15 @@ export default function SiteStatusScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#c5d4eeff' },
-  header: { padding: 16, backgroundColor: '#1e3c72', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  backButton: { padding: 4 },
-  backButtonText: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700' },
-  placeholder: { width: 28 },
+  headerIcons: { flexDirection: 'row', alignItems: 'center' },
+  iconBtn: { padding: 8, marginLeft: 10, position: 'relative' },
+  activeFilterDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444', borderWidth: 1, borderColor: '#1e3c72' },
 
-  kpiContainer: { flexDirection: 'row', padding: 16, gap: 10 },
-  kpiCard: { flex: 1, backgroundColor: '#fff', padding: 16, borderRadius: 12, alignItems: 'center', elevation: 2 },
-  kpiActive: { borderWidth: 2, borderColor: '#1e3c72' },
-  kpiValue: { fontSize: 24, fontWeight: '700', color: '#1e3c72' },
-  kpiLabel: { fontSize: 12, color: '#666', marginTop: 4 },
+  kpiContainer: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, gap: 10 },
+  kpiCard: { flex: 1, backgroundColor: '#fff', padding: 12, borderRadius: 10, alignItems: 'center', elevation: 3, borderTopWidth: 4 },
+  kpiActive: { backgroundColor: '#f0f4ff', elevation: 1 },
+  kpiValue: { fontSize: 22, fontWeight: '800', color: '#1e3c72' },
+  kpiLabel: { fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: '700', textTransform: 'uppercase' },
 
   card: { backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 12, elevation: 2 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
@@ -338,8 +357,4 @@ const styles = StyleSheet.create({
   actionBtnOutlineText: { color: '#475569', fontSize: 13, fontWeight: '600' },
   actionBtnSolid: { flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: '#1e3c72', alignItems: 'center' },
   actionBtnSolidText: { color: '#fff', fontSize: 13, fontWeight: '600' },
-
-  headerIcons: { flexDirection: 'row', alignItems: 'center' },
-  iconBtn: { padding: 8, marginLeft: 10, position: 'relative' },
-  activeFilterDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444', borderWidth: 1, borderColor: '#1e3c72' },
 });

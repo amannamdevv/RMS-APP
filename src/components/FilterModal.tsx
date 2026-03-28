@@ -6,6 +6,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/Feather';
 import { api } from '../api';
+import { moderateScale, responsiveFontSize, verticalScale, scale } from '../utils/responsive';
 
 interface FilterModalProps {
   visible: boolean;
@@ -230,10 +231,10 @@ const FilterModal = ({ visible, onClose, onApply, initialFilters = {} }: FilterM
                       ))}
                     </ScrollView>
                   </View>
-                  {searchType === 'site_id' && <TextInput style={styles.input} placeholder="Enter Site ID" value={siteId} onChangeText={setSiteId} placeholderTextColor="#999" />}
-                  {searchType === 'imei' && <TextInput style={styles.input} placeholder="Enter IMEI" value={imei} onChangeText={setImei} keyboardType="numeric" placeholderTextColor="#999" />}
-                  {searchType === 'global_id' && <TextInput style={styles.input} placeholder="Enter Global ID" value={globalId} onChangeText={setGlobalId} placeholderTextColor="#999" />}
-                  {searchType === 'site_name' && <TextInput style={styles.input} placeholder="Enter Site Name" value={siteName} onChangeText={setSiteName} placeholderTextColor="#999" />}
+                  {searchType === 'site_id' && <TextInput style={styles.input} placeholder="Enter Site ID" value={siteId} onChangeText={setSiteId} placeholderTextColor="#94a3b8" />}
+                  {searchType === 'imei' && <TextInput style={styles.input} placeholder="Enter IMEI" value={imei} onChangeText={setImei} keyboardType="numeric" placeholderTextColor="#94a3b8" />}
+                  {searchType === 'global_id' && <TextInput style={styles.input} placeholder="Enter Global ID" value={globalId} onChangeText={setGlobalId} placeholderTextColor="#94a3b8" />}
+                  {searchType === 'site_name' && <TextInput style={styles.input} placeholder="Enter Site Name" value={siteName} onChangeText={setSiteName} placeholderTextColor="#94a3b8" />}
                 </View>
 
                 <View style={styles.section}>
@@ -259,7 +260,7 @@ const FilterModal = ({ visible, onClose, onApply, initialFilters = {} }: FilterM
                   <RenderChipList data={subCategories} selectedId={selectedSubCategory} onSelect={setSelectedSubCategory} idKey="id" nameKey="name" label="Sub Category" />
                   <View style={styles.filterGroup}>
                     <Text style={styles.label}>Customer Site ID</Text>
-                    <TextInput style={styles.input} placeholder="Enter Customer Site ID" value={customerSiteId} onChangeText={setCustomerSiteId} placeholderTextColor="#999" />
+                    <TextInput style={styles.input} placeholder="Enter Customer Site ID" value={customerSiteId} onChangeText={setCustomerSiteId} placeholderTextColor="#94a3b8" />
                   </View>
                 </View>
 
@@ -337,36 +338,103 @@ const FilterModal = ({ visible, onClose, onApply, initialFilters = {} }: FilterM
 
 const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.6)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30, maxHeight: '90%', paddingBottom: 10 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  modalTitle: { fontSize: 22, fontWeight: '800', color: '#1e3c72' },
-  closeButton: { padding: 8, backgroundColor: '#f1f5f9', borderRadius: 20 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 20 },
-  loadingContainer: { padding: 60, alignItems: 'center' },
-  loadingText: { marginTop: 15, fontSize: 14, color: '#64748b' },
-  section: { marginBottom: 30, backgroundColor: '#fff' },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1e3c72', marginBottom: 15, letterSpacing: 0.5 },
-  filterGroup: { marginBottom: 20 },
-  label: { fontSize: 13, fontWeight: '700', color: '#64748b', marginBottom: 10, textTransform: 'uppercase' },
-  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 25, backgroundColor: '#f8fafc', marginRight: 10, borderWidth: 1, borderColor: '#e2e8f0' },
+  modalContent: { 
+    backgroundColor: '#fff', 
+    borderTopLeftRadius: moderateScale(30), 
+    borderTopRightRadius: moderateScale(30), 
+    maxHeight: '90%', 
+    paddingBottom: verticalScale(10) 
+  },
+  modalHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    padding: moderateScale(20), 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9' 
+  },
+  modalTitle: { fontSize: responsiveFontSize(22), fontWeight: '800', color: '#1e3c72' },
+  closeButton: { padding: moderateScale(8), backgroundColor: '#f1f5f9', borderRadius: moderateScale(20) },
+  scrollContent: { paddingHorizontal: moderateScale(20), paddingTop: verticalScale(20) },
+  loadingContainer: { padding: moderateScale(60), alignItems: 'center' },
+  loadingText: { marginTop: verticalScale(15), fontSize: responsiveFontSize(14), color: '#64748b' },
+  section: { marginBottom: verticalScale(30), backgroundColor: '#fff' },
+  sectionTitle: { fontSize: responsiveFontSize(18), fontWeight: '800', color: '#1e3c72', marginBottom: verticalScale(15), letterSpacing: 0.5 },
+  filterGroup: { marginBottom: verticalScale(20) },
+  label: { fontSize: responsiveFontSize(13), fontWeight: '700', color: '#64748b', marginBottom: verticalScale(10), textTransform: 'uppercase' },
+  chip: { 
+    paddingHorizontal: moderateScale(16), 
+    paddingVertical: verticalScale(10), 
+    borderRadius: moderateScale(25), 
+    backgroundColor: '#f8fafc', 
+    marginRight: moderateScale(10), 
+    borderWidth: 1, 
+    borderColor: '#e2e8f0' 
+  },
   chipActive: { backgroundColor: '#1e3c72', borderColor: '#1e3c72' },
-  chipText: { fontSize: 14, color: '#475569', fontWeight: '600' },
+  chipText: { fontSize: responsiveFontSize(14), color: '#475569', fontWeight: '600' },
   chipTextActive: { color: '#fff' },
-  searchTypeContainer: { marginBottom: 15 },
-  searchTypeChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 25, backgroundColor: '#f1f5f9', marginRight: 8, borderWidth: 1, borderColor: '#e2e8f0' },
+  searchTypeContainer: { marginBottom: verticalScale(15) },
+  searchTypeChip: { 
+    paddingHorizontal: moderateScale(16), 
+    paddingVertical: verticalScale(10), 
+    borderRadius: moderateScale(25), 
+    backgroundColor: '#f1f5f9', 
+    marginRight: moderateScale(8), 
+    borderWidth: 1, 
+    borderColor: '#e2e8f0' 
+  },
   searchTypeChipActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
-  searchTypeText: { fontSize: 14, color: '#475569', fontWeight: '600' },
+  searchTypeText: { fontSize: responsiveFontSize(14), color: '#475569', fontWeight: '600' },
   searchTypeTextActive: { color: '#fff' },
-  input: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 14, fontSize: 16, color: '#1e293b', backgroundColor: '#f8fafc' },
-  dateRow: { flexDirection: 'row', gap: 15 }, 
+  input: { 
+    borderWidth: 1, 
+    borderColor: '#e2e8f0', 
+    borderRadius: moderateScale(12), 
+    padding: moderateScale(14), 
+    fontSize: responsiveFontSize(16), 
+    color: '#1e293b', 
+    backgroundColor: '#f8fafc' 
+  },
+  dateRow: { flexDirection: 'row', gap: moderateScale(15) }, 
   dateGroup: { flex: 1 },
-  dateButton: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 14, backgroundColor: '#f8fafc', alignItems: 'center' },
-  dateButtonText: { fontSize: 14, color: '#1e293b', fontWeight: '700' },
-  actionButtons: { flexDirection: 'row', padding: 20, gap: 15, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
-  resetButton: { flex: 1, padding: 16, borderRadius: 12, backgroundColor: '#f1f5f9', alignItems: 'center' },
-  resetButtonText: { fontSize: 16, fontWeight: '700', color: '#64748b' },
-  applyButton: { flex: 2, padding: 16, borderRadius: 12, backgroundColor: '#1e3c72', alignItems: 'center', shadowColor: '#1e3c72', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
-  applyButtonText: { fontSize: 16, fontWeight: '800', color: '#fff' }
+  dateButton: { 
+    borderWidth: 1, 
+    borderColor: '#e2e8f0', 
+    borderRadius: moderateScale(12), 
+    padding: moderateScale(14), 
+    backgroundColor: '#f8fafc', 
+    alignItems: 'center' 
+  },
+  dateButtonText: { fontSize: responsiveFontSize(14), color: '#1e293b', fontWeight: '700' },
+  actionButtons: { 
+    flexDirection: 'row', 
+    padding: moderateScale(20), 
+    gap: moderateScale(15), 
+    borderTopWidth: 1, 
+    borderTopColor: '#f1f5f9' 
+  },
+  resetButton: { 
+    flex: 1, 
+    padding: verticalScale(16), 
+    borderRadius: moderateScale(12), 
+    backgroundColor: '#f1f5f9', 
+    alignItems: 'center' 
+  },
+  resetButtonText: { fontSize: responsiveFontSize(16), fontWeight: '700', color: '#64748b' },
+  applyButton: { 
+    flex: 2, 
+    padding: verticalScale(16), 
+    borderRadius: moderateScale(12), 
+    backgroundColor: '#1e3c72', 
+    alignItems: 'center', 
+    shadowColor: '#1e3c72', 
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.3, 
+    shadowRadius: 8, 
+    elevation: 4 
+  },
+  applyButtonText: { fontSize: responsiveFontSize(16), fontWeight: '800', color: '#fff' }
 });
 
 export default FilterModal;

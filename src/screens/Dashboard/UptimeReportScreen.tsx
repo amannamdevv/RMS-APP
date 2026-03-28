@@ -3,17 +3,16 @@ import {
     View, Text, StyleSheet, FlatList, TouchableOpacity,
     ActivityIndicator, SafeAreaView, RefreshControl, Alert
 } from 'react-native';
-import { api } from '../../api';
+import { api, logoutApi } from '../../api';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import LinearGradient from 'react-native-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import FilterModal from '../../components/FilterModal';
 import Sidebar from '../../components/Sidebar';
+import AppHeader from '../../components/AppHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { logoutApi } from '../../api/auth';
 import { RootStackParamList } from '../../types/navigation';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -153,49 +152,43 @@ export default function UptimeReportScreen({ navigation }: NativeStackScreenProp
 
     return (
         <SafeAreaView style={styles.container}>
-            <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.header}>
-                <View style={styles.topBar}>
-                    <TouchableOpacity onPress={() => setSidebarVisible(true)} hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}>
-                        <Icon name="menu" size={24} color="#fff" />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>State-wise Uptime Report</Text>
-                    
-                    <View style={styles.headerIcons}>
-                        <TouchableOpacity style={styles.headerIcon} onPress={handleExport} disabled={exporting}>
-                            {exporting ? <ActivityIndicator size="small" color="#fff" /> : <Icon name="download" size={22} color="#fff" />}
-                        </TouchableOpacity>
-                        
-                        <TouchableOpacity style={styles.headerIcon} onPress={() => setFilterModalVisible(true)}>
-                            <Icon name="filter" size={22} color="#fff" />
-                            {Object.keys(activeFilters).length > 0 && <View style={styles.filterDot} />}
-                        </TouchableOpacity>
-                    </View>
-                </View>
+            <View style={{ flex: 1, alignSelf: 'center', width: '100%', maxWidth: 650 }}>
+            <AppHeader
+                title="UPTIME & SLA"
+                subtitle="Performance Dashboard"
+                leftAction="menu"
+                onLeftPress={() => setSidebarVisible(true)}
+                rightActions={[
+                    { icon: exporting ? 'loader' : 'download', onPress: handleExport },
+                    { icon: 'filter', onPress: () => setFilterModalVisible(true), badge: Object.keys(activeFilters).length > 0 },
+                ]}
+            />
+            
 
-                <FilterModal 
-                    visible={filterModalVisible} 
-                    onClose={() => setFilterModalVisible(false)} 
-                    onApply={(f) => setActiveFilters(f)} 
-                    initialFilters={activeFilters} 
-                />
-                
-                {summary && (
-                    <Animatable.View animation="fadeIn" style={styles.summaryBox}>
-                        <View style={styles.summaryItem}>
-                            <Text style={styles.summaryVal}>{summary.total_states}</Text>
-                            <Text style={styles.summaryLab}>States</Text>
-                        </View>
-                        <View style={styles.summaryItem}>
-                            <Text style={styles.summaryVal}>{summary.total_sites}</Text>
-                            <Text style={styles.summaryLab}>Sites</Text>
-                        </View>
-                        <View style={styles.summaryItem}>
-                            <Text style={styles.summaryVal}>{summary.report_date?.split('-').reverse().join('/')}</Text>
-                            <Text style={styles.summaryLab}>As Of</Text>
-                        </View>
-                    </Animatable.View>
-                )}
-            </LinearGradient>
+
+            <FilterModal 
+                visible={filterModalVisible} 
+                onClose={() => setFilterModalVisible(false)} 
+                onApply={(f) => setActiveFilters(f)} 
+                initialFilters={activeFilters} 
+            />
+            
+            {summary && (
+                <Animatable.View animation="fadeIn" style={styles.summaryBox}>
+                    <View style={styles.summaryItem}>
+                        <Text style={styles.summaryVal}>{summary.total_states}</Text>
+                        <Text style={styles.summaryLab}>States</Text>
+                    </View>
+                    <View style={styles.summaryItem}>
+                        <Text style={styles.summaryVal}>{summary.total_sites}</Text>
+                        <Text style={styles.summaryLab}>Sites</Text>
+                    </View>
+                    <View style={styles.summaryItem}>
+                        <Text style={styles.summaryVal}>{summary.report_date?.split('-').reverse().join('/')}</Text>
+                        <Text style={styles.summaryLab}>As Of</Text>
+                    </View>
+                </Animatable.View>
+            )}
 
             {loading && !refreshing ? (
                 <View style={styles.loader}>
@@ -231,22 +224,23 @@ export default function UptimeReportScreen({ navigation }: NativeStackScreenProp
                 }}
                 activeRoute="UptimeReport"
             />
+            </View>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f0f4f8' },
+    container: { flex: 1, backgroundColor: '#c5d4eeff' },
     header: { padding: 20, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, elevation: 10 },
     topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
     headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', flex: 1, marginLeft: 15 },
     headerIcons: { flexDirection: 'row', alignItems: 'center' },
     headerIcon: { padding: 8, position: 'relative' },
     filterDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444', borderWidth: 1, borderColor: '#1e3c72' },
-    summaryBox: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 15, padding: 15 },
+    summaryBox: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: '#fff', borderRadius: 15, padding: 15, marginHorizontal: 15, marginTop: 15, elevation: 3 },
     summaryItem: { alignItems: 'center' },
-    summaryVal: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-    summaryLab: { color: 'rgba(255,255,255,0.7)', fontSize: 10, textTransform: 'uppercase', marginTop: 2 },
+    summaryVal: { color: '#1e3c72', fontSize: 18, fontWeight: 'bold' },
+    summaryLab: { color: '#64748b', fontSize: 10, textTransform: 'uppercase', marginTop: 2 },
     
     listContainer: { padding: 15 },
     card: { backgroundColor: '#fff', borderRadius: 20, marginBottom: 15, elevation: 3, padding: 15, borderLeftWidth: 5, borderLeftColor: '#1e3c72' },

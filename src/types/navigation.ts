@@ -7,6 +7,8 @@ export type RootStackParamList = {
   SiteDetails: { imei: string, siteId: string };
   NonCommSites: undefined;
   SiteRunningStatus: undefined;
+  SiteRunHoursDetail: { imei: string; siteName: string };
+  BackupUsage: undefined;
   SiteDistribution: undefined;
   SiteTypeDetails: { siteType: string, title: string, filters: any };
   Dashboard: { fullname: string };
@@ -35,4 +37,7 @@ export type RootStackParamList = {
   TTTool: { initialTab?: 'equipment' | 'repairs' | 'tickets' | 'raise' };
   SiteMaintenanceTool: { initialTab?: 'infra' | 'smps' | 'dcem' };
 
+  OptimizationReports: { initialTab?: string };
+  SupportRequired: undefined;
+  RoboticCallStatus: undefined;
 };

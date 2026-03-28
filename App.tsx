@@ -13,6 +13,8 @@ import SiteStatusScreen from './src/screens/Home/SiteStatusScreen';
 import SiteDetailsScreen from './src/screens/Home/SiteDetailsScreen';
 import NonCommSitesScreen from './src/screens/Home/NonCommSitesScreen';
 import SiteRunningStatusScreen from './src/screens/Home/SiteRunningStatusScreen';
+import SiteRunHoursDetailScreen from './src/screens/Home/SiteRunHoursDetailScreen';
+import BackupUsageScreen from './src/screens/Home/BackupUsageScreen';
 import SiteDistributionScreen from './src/screens/Home/SiteDistributionScreen';
 import SiteTypeDetailsScreen from './src/screens/Home/SiteTypeDetailsScreen';
 import DashboardScreen from './src/screens/Dashboard/DashboardScreen';
@@ -20,25 +22,45 @@ import SiteHealthScreen from './src/screens/Dashboard/SiteHealthScreen';
 import SiteVitalsScreen from './src/screens/Dashboard/SiteVitalsScreen';
 import SiteAutomationScreen from './src/screens/Dashboard/SiteAutomationScreen';
 import LiveAlarmsScreen from './src/screens/Dashboard/LiveAlarmsScreen';
-import EnergyRunHoursScreen from './src/screens/EnergyRunHoursScreen';
-import EnergyRunHoursDetailsScreen from './src/screens/EnergyRunHoursDetailsScreen';
 import UptimeDetailsScreen from './src/screens/Dashboard/UptimeDetailsScreen';
 import UptimeReportScreen from './src/screens/Dashboard/UptimeReportScreen';
-import CommReportScreen from './src/screens/CommReportScreen';
-import UptimeDashboardScreen from './src/screens/UptimeDashboard';
-import UptimeSiteDetailsScreen from './src/screens/UptimeSiteDetails';
-import DCEMAnalyticsScreen from './src/screens/DCEMAnalyticsScreen';
-import DCEMMonthlyReportScreen from './src/screens/DCEMMonthlyReportScreen';
-import NocAnalyticsScreen from './src/screens/NocAnalytics';
-import TTToolScreen from './src/screens/TTToolScreen';
-import SiteMaintenanceToolScreen from './src/screens/SiteMaintenanceToolScreen';
-import Assethealthdashboard from './src/screens/Assethealthdashboard';
-import MasterReportScreen from './src/screens/MasterReport';
-import GridBillingScreen from './src/screens/GridBillingScreen';
-import ResourceMappingScreen from './src/screens/ResourceMappingScreen';
-import SiteVariationScreen from './src/screens/SiteVariationScreen';
-import SiteLogsScreen from './src/screens/SiteLogsScreen';
-import HistoricalAlarmsScreen from './src/screens/HistoricalAlarmsScreen';
+// Energy Management
+import EnergyRunHoursScreen from './src/screens/Energy/EnergyRunHoursScreen';
+import EnergyRunHoursDetailsScreen from './src/screens/Energy/EnergyRunHoursDetailsScreen';
+
+// Uptime & SLA Analytics
+import UptimeDashboardScreen from './src/screens/Uptime/UptimeDashboardScreen';
+import UptimeSiteDetailsScreen from './src/screens/Uptime/UptimeSiteDetailsScreen';
+
+// DCEM Analytics
+import DCEMAnalyticsScreen from './src/screens/DCEM/DCEMAnalyticsScreen';
+import DCEMMonthlyReportScreen from './src/screens/DCEM/DCEMMonthlyReportScreen';
+
+// NOC Analytics
+import NocAnalyticsScreen from './src/screens/Analytics/NocAnalyticsScreen';
+
+// Maintenance & Tools
+import TTToolScreen from './src/screens/Maintenance/TTToolScreen';
+import SiteMaintenanceToolScreen from './src/screens/Maintenance/SiteMaintenanceToolScreen';
+
+// Asset Health
+import Assethealthdashboard from './src/screens/AssetHealth/Assethealthdashboard';
+
+// Specialized Reports
+import CommReportScreen from './src/screens/CommReport/CommReportScreen';
+import MasterReportScreen from './src/screens/MasterReport/MasterReportScreen';
+import GridBillingScreen from './src/screens/GridBilling/GridBillingScreen';
+import OptimizationReportsScreen from './src/screens/Optimization/OptimizationReportsScreen';
+import SiteVariationScreen from './src/screens/SiteVariation/SiteVariationScreen';
+
+// Resource Mapping
+import ResourceMappingScreen from './src/screens/Mapping/ResourceMappingScreen';
+
+// History Logs
+import SiteLogsScreen from './src/screens/History/SiteLogsScreen';
+import HistoricalAlarmsScreen from './src/screens/History/HistoricalAlarmsScreen';
+import SupportRequiredScreen from './src/screens/Support/SupportRequiredScreen';
+import RoboticCallStatusScreen from './src/screens/Home/RoboticCallStatusScreen';
 
 
 
@@ -65,6 +87,8 @@ export default function App() {
         <Stack.Screen name="SiteDetails" component={SiteDetailsScreen} />
         <Stack.Screen name="NonCommSites" component={NonCommSitesScreen} />
         <Stack.Screen name="SiteRunningStatus" component={SiteRunningStatusScreen} />
+        <Stack.Screen name="SiteRunHoursDetail" component={SiteRunHoursDetailScreen} />
+        <Stack.Screen name="BackupUsage" component={BackupUsageScreen} />
         <Stack.Screen name="SiteDistribution" component={SiteDistributionScreen} />
         <Stack.Screen name="SiteTypeDetails" component={SiteTypeDetailsScreen} />
 
@@ -91,10 +115,13 @@ export default function App() {
         <Stack.Screen name="AssetHealth" component={Assethealthdashboard} />
         <Stack.Screen name="MasterReport" component={MasterReportScreen} />
         <Stack.Screen name="GridBilling" component={GridBillingScreen} />
+        <Stack.Screen name="OptimizationReports" component={OptimizationReportsScreen} />
         <Stack.Screen name="ResourceMapping" component={ResourceMappingScreen} />
         <Stack.Screen name="SiteVariation" component={SiteVariationScreen} />
         <Stack.Screen name="SiteLogs" component={SiteLogsScreen} />
         <Stack.Screen name="HistoricalAlarms" component={HistoricalAlarmsScreen} />
+        <Stack.Screen name="SupportRequired" component={SupportRequiredScreen} />
+        <Stack.Screen name="RoboticCallStatus" component={RoboticCallStatusScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>

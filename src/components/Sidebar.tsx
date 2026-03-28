@@ -4,8 +4,7 @@ import {
   Animated, Dimensions, TouchableWithoutFeedback, Modal, SafeAreaView, Easing
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-
-const { width } = Dimensions.get('window');
+import { scale, verticalScale, moderateScale, responsiveFontSize, SCREEN_WIDTH as width } from '../utils/responsive';
 
 interface SidebarProps {
   isVisible: boolean;
@@ -25,10 +24,10 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
   const isAlarmsSubActive = ['LiveAlarms'].includes(activeRoute || '');
   const isUptimeSubActive = ['UptimeDashboard', 'UptimeSiteDetails'].includes(activeRoute || '');
   const isAssetSubActive = ['AssetHealth'].includes(activeRoute || '');
-  const isDCEMSubActive = ['DCEMAnalytics', 'DCEMMonthlyReport'].includes(activeRoute || '');
   const isEnergySubActive = ['EnergyRunHours', 'EnergyRunHoursDetails'].includes(activeRoute || '');
   const isHistorySubActive = ['SiteLogs', 'HistoricalAlarms'].includes(activeRoute || '');
   const isMaintenanceSubActive = ['TTTool', 'SiteMaintenanceTool'].includes(activeRoute || '');
+  const isOptimizationSubActive = ['OptimizationReports'].includes(activeRoute || '');
 
   useEffect(() => {
     if (isSitesSubActive) {
@@ -39,14 +38,14 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
       setExpandedMenu('Uptime & SLA Analytics');
     } else if (isAssetSubActive) {
       setExpandedMenu('Asset Health');
-    } else if (isDCEMSubActive) {
-      setExpandedMenu('DCEM Analytics');
     } else if (isEnergySubActive) {
       setExpandedMenu('Energy Management');
     } else if (isHistorySubActive) {
       setExpandedMenu('History Logs');
     } else if (isMaintenanceSubActive) {
       setExpandedMenu('Site Maintenance Tool');
+    } else if (isOptimizationSubActive) {
+      setExpandedMenu('Optimization Reports');
     }
   }, [activeRoute]);
 
@@ -105,7 +104,7 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
 
             <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
 
-              {/* HOME */}
+              {/* 1. HOME */}
               <TouchableOpacity
                 style={[styles.item, activeRoute === 'Home' && styles.itemActive]}
                 onPress={() => navigateTo('Home')}
@@ -114,7 +113,7 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 <Text style={[styles.text, activeRoute === 'Home' && { color: '#61A5C2' }]}>Home</Text>
               </TouchableOpacity>
 
-              {/* DASHBOARD */}
+              {/* 2. DASHBOARD */}
               <TouchableOpacity
                 style={[styles.item, activeRoute === 'Dashboard' && styles.itemActive]}
                 onPress={() => navigateTo('Dashboard')}
@@ -123,7 +122,7 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 <Text style={[styles.text, activeRoute === 'Dashboard' && { color: '#61A5C2' }]}>Dashboard</Text>
               </TouchableOpacity>
 
-              {/* LIVE SITES STATUS DROP-DOWN */}
+              {/* 3. LIVE SITES STATUS DROP-DOWN */}
               <TouchableOpacity style={styles.accordion} onPress={() => toggleAccordion('Live Sites Status')} activeOpacity={0.7}>
                 <View style={styles.row}>
                   <Icon name="activity" size={20} color={(isSitesSubActive || expandedMenu === 'Live Sites Status') ? "#61A5C2" : "#fff"} style={styles.icon} />
@@ -149,7 +148,7 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 </View>
               )}
 
-              {/* ALARMS MANAGEMENT DROP-DOWN */}
+              {/* 4. ALARMS MANAGEMENT DROP-DOWN */}
               <TouchableOpacity style={styles.accordion} onPress={() => toggleAccordion('Alarms Management')} activeOpacity={0.7}>
                 <View style={styles.row}>
                   <Icon name="bell" size={20} color={(isAlarmsSubActive || expandedMenu === 'Alarms Management') ? "#61A5C2" : "#fff"} style={styles.icon} />
@@ -172,7 +171,17 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 </View>
               )}
 
-              {/* ENERGY MANAGEMENT */}
+              {/* 5. AMF SMPS LAST COM */}
+              <TouchableOpacity
+                style={[styles.item, activeRoute === 'CommReport' && styles.itemActive]}
+                onPress={() => navigateTo('CommReport')}
+                activeOpacity={0.7}
+              >
+                <Icon name="file-text" size={20} color={activeRoute === 'CommReport' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'CommReport' && { color: '#61A5C2' }]}>Amf Smps Last Com</Text>
+              </TouchableOpacity>
+
+              {/* 6. ENERGY MANAGEMENT */}
               <TouchableOpacity
                 style={[styles.item, isEnergySubActive && styles.itemActive]}
                 onPress={() => navigateTo('EnergyRunHours')}
@@ -181,7 +190,36 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 <Text style={[styles.text, isEnergySubActive && { color: '#61A5C2' }]}>Energy Management</Text>
               </TouchableOpacity>
 
-              {/* UPTIME & SLA ANALYTICS DROP-DOWN (NEW) */}
+              {/* 7. MASTER REPORT */}
+              <TouchableOpacity
+                style={[styles.item, activeRoute === 'MasterReport' && styles.itemActive]}
+                onPress={() => navigateTo('MasterReport')}
+                activeOpacity={0.7}
+              >
+                <Icon name="database" size={20} color={activeRoute === 'MasterReport' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'MasterReport' && { color: '#61A5C2' }]}>Master Report</Text>
+              </TouchableOpacity>
+
+              {/* 8. SITE VARIATION ANALYSIS */}
+              <TouchableOpacity
+                style={[styles.item, activeRoute === 'SiteVariation' && styles.itemActive]}
+                onPress={() => navigateTo('SiteVariation')}
+                activeOpacity={0.7}
+              >
+                <Icon name="activity" size={20} color={activeRoute === 'SiteVariation' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'SiteVariation' && { color: '#61A5C2' }]}>Site Variation Analysis</Text>
+              </TouchableOpacity>
+
+              {/* 9. DCEM ANALYTICS */}
+              <TouchableOpacity
+                style={[styles.item, activeRoute === 'DCEMAnalytics' && styles.itemActive]}
+                onPress={() => navigateTo('DCEMAnalytics')}
+              >
+                <Icon name="bar-chart-2" size={20} color={activeRoute === 'DCEMAnalytics' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'DCEMAnalytics' && { color: '#61A5C2' }]}>DCEM Analytics</Text>
+              </TouchableOpacity>
+
+              {/* 10. UPTIME & SLA ANALYTICS DROP-DOWN */}
               <TouchableOpacity style={styles.accordion} onPress={() => toggleAccordion('Uptime & SLA Analytics')} activeOpacity={0.7}>
                 <View style={styles.row}>
                   <Icon name="trending-up" size={20} color={(isUptimeSubActive || expandedMenu === 'Uptime & SLA Analytics') ? "#61A5C2" : "#fff"} style={styles.icon} />
@@ -216,36 +254,7 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 </View>
               )}
 
-              {/* ── DCEM Analytics ── */}
-              <TouchableOpacity
-                style={[styles.accordion, (isDCEMSubActive || expandedMenu === 'DCEM Analytics') && styles.itemActive]}
-                onPress={() => toggleAccordion('DCEM Analytics')}
-                activeOpacity={0.7}
-              >
-                <View style={styles.row}>
-                  <Icon name="bar-chart-2" size={20} color={(isDCEMSubActive || expandedMenu === 'DCEM Analytics') ? "#61A5C2" : "#fff"} style={styles.icon} />
-                  <Text style={[styles.text, (isDCEMSubActive || expandedMenu === 'DCEM Analytics') && { color: '#61A5C2' }]}>DCEM Analytics</Text>
-                </View>
-                <Icon name={expandedMenu === 'DCEM Analytics' ? "chevron-up" : "chevron-down"} size={16} color="#94a3b8" />
-              </TouchableOpacity>
-
-              {expandedMenu === 'DCEM Analytics' && (
-                <View style={styles.subMenu}>
-                  {[
-                    { name: 'DCEM Overview', route: 'DCEMAnalytics' },
-                    { name: 'Monthly Report', route: 'DCEMMonthlyReport' },
-                  ].map((item) => (
-                    <TouchableOpacity
-                      key={item.route}
-                      style={styles.subItem}
-                      onPress={() => navigateTo(item.route)}
-                    >
-                      <Text style={[styles.subText, activeRoute === item.route && styles.activeSubText]}>• {item.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
+              {/* 11. NOC ANALYTICS */}
               <TouchableOpacity
                 style={[styles.item, activeRoute === 'NocAnalytics' && styles.itemActive]}
                 onPress={() => navigateTo('NocAnalytics')}
@@ -254,8 +263,51 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 <Text style={[styles.text, activeRoute === 'NocAnalytics' && { color: '#61A5C2' }]}>NOC Analytics</Text>
               </TouchableOpacity>
 
+              {/* 12. ASSET HEALTH MANAGEMENT DROP-DOWN */}
+              <TouchableOpacity
+                style={[styles.accordion, (isAssetSubActive || expandedMenu === 'Asset Health') && styles.itemActive]}
+                onPress={() => toggleAccordion('Asset Health')}
+                activeOpacity={0.7}
+              >
+                <View style={styles.row}>
+                  <Icon name="activity" size={20} color={(isAssetSubActive || expandedMenu === 'Asset Health') ? "#61A5C2" : "#fff"} style={styles.icon} />
+                  <Text style={[styles.text, (isAssetSubActive || expandedMenu === 'Asset Health') && { color: '#61A5C2' }]}>Asset Health Management</Text>
+                </View>
+                <Icon name={expandedMenu === 'Asset Health' ? "chevron-up" : "chevron-down"} size={16} color="#94a3b8" />
+              </TouchableOpacity>
 
-              {/* SITE MAINTENANCE TOOL dropdown */}
+              {expandedMenu === 'Asset Health' && (
+                <View style={styles.subMenu}>
+                  {[
+                    { name: 'Battery', tab: 'battery' },
+                    { name: 'DG', tab: 'dg' },
+                    { name: 'Rectifier', tab: 'rectifier' },
+                    { name: 'Solar', tab: 'solar' },
+                    { name: 'DG Battery', tab: 'dg_battery' },
+                    { name: 'LA (Lightning)', tab: 'lightning' },
+                  ].map((item) => (
+                    <TouchableOpacity
+                      key={item.tab}
+                      style={styles.subItem}
+                      onPress={() => navigateTo('AssetHealth', { tab: item.tab })}
+                    >
+                      <Text style={[styles.subText, activeRoute === 'AssetHealth' && styles.activeSubText]}>• {item.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {/* 13. ROBOTIC CALL STATUS */}
+              <TouchableOpacity
+                style={[styles.item, activeRoute === 'RoboticCallStatus' && styles.itemActive]}
+                onPress={() => navigateTo('RoboticCallStatus')}
+                activeOpacity={0.7}
+              >
+                <Icon name="phone-call" size={20} color={activeRoute === 'RoboticCallStatus' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'RoboticCallStatus' && { color: '#61A5C2' }]}>Robotic Call Status</Text>
+              </TouchableOpacity>
+
+              {/* 15. SITE MAINTENANCE TOOL dropdown */}
               <TouchableOpacity
                 style={styles.accordion}
                 onPress={() => toggleAccordion('Site Maintenance Tool')}
@@ -295,7 +347,56 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 </View>
               )}
 
-              {/* TT Tool (Quick Link) */}
+              {/* 16. GRID POWER ANALYTICS */}
+              <TouchableOpacity
+                style={[styles.item, activeRoute === 'GridBilling' && styles.itemActive]}
+                onPress={() => navigateTo('GridBilling')}
+              >
+                <Icon name="zap" size={20} color={activeRoute === 'GridBilling' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'GridBilling' && { color: '#61A5C2' }]}>Grid Power Analytics</Text>
+              </TouchableOpacity>
+
+              {/* 17. OPTIMIZATION REPORTS DROP-DOWN */}
+              <TouchableOpacity
+                style={styles.accordion}
+                onPress={() => toggleAccordion('Optimization Reports')}
+                activeOpacity={0.7}
+              >
+                <View style={styles.row}>
+                  <Icon name="pie-chart" size={20} color={(isOptimizationSubActive || expandedMenu === 'Optimization Reports') ? "#61A5C2" : "#fff"} style={styles.icon} />
+                  <Text style={[styles.text, (isOptimizationSubActive || expandedMenu === 'Optimization Reports') && { color: '#61A5C2' }]}>Optimization Reports</Text>
+                </View>
+                <Icon
+                  name={expandedMenu === 'Optimization Reports' ? "chevron-up" : "chevron-down"}
+                  size={16}
+                  color="#94a3b8"
+                />
+              </TouchableOpacity>
+
+              {expandedMenu === 'Optimization Reports' && (
+                <View style={styles.subMenu}>
+                  {[
+                    { name: 'Energy KPIs', tab: 'energy' },
+                    { name: 'High Loss Sites', tab: 'losses' },
+                    { name: 'Low Voltage Sites', tab: 'voltage' },
+                    { name: 'Revenue Leakage', tab: 'leakage' },
+                    { name: 'SO vs Actual', tab: 'power' },
+                    { name: 'Power Factor', tab: 'powerfactor' },
+                    { name: 'Load Optimization', tab: 'sanctioned' },
+                    { name: 'Event Monitoring', tab: 'events' },
+                  ].map(item => (
+                    <TouchableOpacity
+                      key={item.tab}
+                      style={styles.subItem}
+                      onPress={() => { onClose(); navigation.navigate('OptimizationReports', { initialTab: item.tab }); }}
+                    >
+                      <Text style={[styles.subText, activeRoute === 'OptimizationReports' && styles.activeSubText]}>• {item.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {/* 18. TT TOOL */}
               <TouchableOpacity
                 style={[styles.item, activeRoute === 'TTTool' && !isMaintenanceSubActive && styles.itemActive]}
                 onPress={() => { onClose(); navigation.navigate('TTTool', { initialTab: 'raise' }); }}
@@ -304,70 +405,27 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                 <Text style={[styles.text, activeRoute === 'TTTool' && { color: '#61A5C2' }]}>TT Tool</Text>
               </TouchableOpacity>
 
-              {/* Asset Health Management */}
+              {/* 19. SUPPORT REQUIRED */}
               <TouchableOpacity
-                style={[styles.accordion, (isAssetSubActive || expandedMenu === 'Asset Health') && styles.itemActive]}
-                onPress={() => toggleAccordion('Asset Health')}
+                style={[styles.item, activeRoute === 'SupportRequired' && styles.itemActive]}
+                onPress={() => navigateTo('SupportRequired')}
                 activeOpacity={0.7}
               >
-                <View style={styles.row}>
-                  <Icon name="activity" size={20} color={(isAssetSubActive || expandedMenu === 'Asset Health') ? "#61A5C2" : "#fff"} style={styles.icon} />
-                  <Text style={[styles.text, (isAssetSubActive || expandedMenu === 'Asset Health') && { color: '#61A5C2' }]}>Asset Health</Text>
-                </View>
-                <Icon name={expandedMenu === 'Asset Health' ? "chevron-up" : "chevron-down"} size={16} color="#94a3b8" />
+                <Icon name="life-buoy" size={20} color={activeRoute === 'SupportRequired' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'SupportRequired' && { color: '#61A5C2' }]}>Support Required</Text>
               </TouchableOpacity>
 
-              {expandedMenu === 'Asset Health' && (
-                <View style={styles.subMenu}>
-                  {[
-                    { name: 'Battery', tab: 'battery' },
-                    { name: 'DG', tab: 'dg' },
-                    { name: 'Rectifier', tab: 'rectifier' },
-                    { name: 'Solar', tab: 'solar' },
-                    { name: 'DG Battery', tab: 'dg_battery' },
-                    { name: 'LA (Lightning)', tab: 'lightning' },
-                  ].map((item) => (
-                    <TouchableOpacity
-                      key={item.tab}
-                      style={styles.subItem}
-                      onPress={() => navigateTo('AssetHealth', { tab: item.tab })}
-                    >
-                      <Text style={[styles.subText, activeRoute === 'AssetHealth' && styles.activeSubText]}>• {item.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
-              {/* COMM REPORT */}
+              {/* 20. MAPPING OF RESOURCES */}
               <TouchableOpacity
-                style={[styles.item, activeRoute === 'CommReport' && styles.itemActive]}
-                onPress={() => navigateTo('CommReport')}
+                style={[styles.item, activeRoute === 'ResourceMapping' && styles.itemActive]}
+                onPress={() => navigateTo('ResourceMapping')}
                 activeOpacity={0.7}
               >
-                <Icon name="file-text" size={20} color={activeRoute === 'CommReport' ? "#61A5C2" : "#fff"} style={styles.icon} />
-                <Text style={[styles.text, activeRoute === 'CommReport' && { color: '#61A5C2' }]}>Amf Smps Last Comm</Text>
+                <Icon name="map" size={20} color={activeRoute === 'ResourceMapping' ? "#61A5C2" : "#fff"} style={styles.icon} />
+                <Text style={[styles.text, activeRoute === 'ResourceMapping' && { color: '#61A5C2' }]}>Mapping of Resources</Text>
               </TouchableOpacity>
 
-              {/* MASTER REPORT */}
-              <TouchableOpacity
-                style={[styles.item, activeRoute === 'MasterReport' && styles.itemActive]}
-                onPress={() => navigateTo('MasterReport')}
-                activeOpacity={0.7}
-              >
-                <Icon name="database" size={20} color={activeRoute === 'MasterReport' ? "#61A5C2" : "#fff"} style={styles.icon} />
-                <Text style={[styles.text, activeRoute === 'MasterReport' && { color: '#61A5C2' }]}>Master Report</Text>
-              </TouchableOpacity>
-
-              {/* Grid Power Analytics */}
-              <TouchableOpacity
-                style={[styles.item, activeRoute === 'GridBilling' && styles.itemActive]}
-                onPress={() => navigateTo('GridBilling')}
-              >
-                <Icon name="zap" size={20} color={activeRoute === 'GridBilling' ? "#61A5C2" : "#fff"} style={styles.icon} />
-                <Text style={[styles.text, activeRoute === 'GridBilling' && { color: '#61A5C2' }]}>Grid Analytics</Text>
-              </TouchableOpacity>
-
-              {/* HISTORY LOGS DROP-DOWN */}
+              {/* 22. HISTORY LOGS DROP-DOWN */}
               <TouchableOpacity style={styles.accordion} onPress={() => toggleAccordion('History Logs')} activeOpacity={0.7}>
                 <View style={styles.row}>
                   <Icon name="clock" size={20} color={(isHistorySubActive || expandedMenu === 'History Logs') ? "#61A5C2" : "#fff"} style={styles.icon} />
@@ -392,27 +450,6 @@ export default function Sidebar({ isVisible, onClose, navigation, fullname, hand
                   ))}
                 </View>
               )}
-
-
-              {/* MAPPING OF RESOURCES */}
-              <TouchableOpacity
-                style={[styles.item, activeRoute === 'ResourceMapping' && styles.itemActive]}
-                onPress={() => navigateTo('ResourceMapping')}
-                activeOpacity={0.7}
-              >
-                <Icon name="map" size={20} color={activeRoute === 'ResourceMapping' ? "#61A5C2" : "#fff"} style={styles.icon} />
-                <Text style={[styles.text, activeRoute === 'ResourceMapping' && { color: '#61A5C2' }]}>Mapping of Resources</Text>
-              </TouchableOpacity>
-
-              {/* SITE VARIATION ANALYSIS */}
-              <TouchableOpacity
-                style={[styles.item, activeRoute === 'SiteVariation' && styles.itemActive]}
-                onPress={() => navigateTo('SiteVariation')}
-                activeOpacity={0.7}
-              >
-                <Icon name="activity" size={20} color={activeRoute === 'SiteVariation' ? "#61A5C2" : "#fff"} style={styles.icon} />
-                <Text style={[styles.text, activeRoute === 'SiteVariation' && { color: '#61A5C2' }]}>Site Variation Analysis</Text>
-              </TouchableOpacity>
 
             </ScrollView>
 
@@ -447,23 +484,60 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
     zIndex: 9999
   },
-  profileSection: { padding: 20, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#1e3c72', backgroundColor: '#162b4d' },
-  avatarCircle: { width: 45, height: 45, borderRadius: 23, backgroundColor: '#61A5C2', justifyContent: 'center', alignItems: 'center' },
-  avatarText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  profileName: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  profileRole: { color: '#89C2D9', fontSize: 12 },
-  scroll: { flex: 1, paddingVertical: 10 },
-  item: { flexDirection: 'row', alignItems: 'center', padding: 15, paddingHorizontal: 20 },
+  profileSection: { 
+    padding: moderateScale(20), 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#1e3c72', 
+    backgroundColor: '#162b4d' 
+  },
+  avatarCircle: { 
+    width: scale(45), 
+    height: scale(45), 
+    borderRadius: scale(23), 
+    backgroundColor: '#61A5C2', 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  avatarText: { color: '#fff', fontSize: responsiveFontSize(18), fontWeight: 'bold' },
+  profileName: { color: '#fff', fontSize: responsiveFontSize(16), fontWeight: 'bold' },
+  profileRole: { color: '#89C2D9', fontSize: responsiveFontSize(12) },
+  scroll: { flex: 1, paddingVertical: verticalScale(10) },
+  item: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    padding: moderateScale(15), 
+    paddingHorizontal: moderateScale(20) 
+  },
   itemActive: { backgroundColor: '#1e3c72', borderLeftWidth: 4, borderLeftColor: '#61A5C2' },
-  accordion: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, paddingHorizontal: 20 },
+  accordion: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    padding: moderateScale(15), 
+    paddingHorizontal: moderateScale(20) 
+  },
   row: { flexDirection: 'row', alignItems: 'center' },
-  icon: { marginRight: 15 },
-  text: { color: '#fff', fontSize: 15, fontWeight: '500' },
-  subMenu: { backgroundColor: '#0a1629', paddingBottom: 10 },
-  subItem: { padding: 10, paddingLeft: 55 },
-  subText: { color: '#89C2D9', fontSize: 13 },
+  icon: { marginRight: moderateScale(15) },
+  text: { color: '#fff', fontSize: responsiveFontSize(15), fontWeight: '500' },
+  subMenu: { backgroundColor: '#0a1629', paddingBottom: verticalScale(10) },
+  subItem: { padding: moderateScale(10), paddingLeft: moderateScale(55) },
+  subText: { color: '#89C2D9', fontSize: responsiveFontSize(13) },
   activeSubText: { color: '#fff', fontWeight: 'bold' },
-  footer: { padding: 20, borderTopWidth: 1, borderTopColor: '#1e3c72', paddingBottom: 30 },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(220, 38, 38, 0.2)', padding: 12, borderRadius: 8, justifyContent: 'center' },
-  logoutText: { color: '#fca5a5', fontSize: 16, fontWeight: 'bold' }
+  footer: { 
+    padding: moderateScale(20), 
+    borderTopWidth: 1, 
+    borderTopColor: '#1e3c72', 
+    paddingBottom: verticalScale(30) 
+  },
+  logoutBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(220, 38, 38, 0.2)', 
+    padding: moderateScale(12), 
+    borderRadius: moderateScale(8), 
+    justifyContent: 'center' 
+  },
+  logoutText: { color: '#fca5a5', fontSize: responsiveFontSize(16), fontWeight: 'bold' }
 });

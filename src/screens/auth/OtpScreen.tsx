@@ -16,7 +16,7 @@ import {
   Image,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {verifyOtpApi} from '../../api/auth';
+import { verifyOtpApi } from '../../api';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 
